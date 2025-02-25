@@ -6,69 +6,57 @@
   <title>聯絡我</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .hero {
-      background: linear-gradient(135deg, #1DB954 0%, #191414 100%);
-    }
+    body { background-color: #FAFAFA; color: #3E2723; font-family: 'Lora', serif; }
+    .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    .form-container { background: #FFFFFF; padding: 2rem; border-radius: 12px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); }
+    .btn { background: #3E2723; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; }
+    .btn:hover { background: #5D4037; }
   </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body>
   <!-- 導航欄 -->
-  <section class="w-full border-b border-gray-700 bg-black shadow-md">
-    <div class="container mx-auto flex items-center justify-between py-4 px-6">
-      <a href="about.html">
-        <img src="https://d22po4pjz3o32e.cloudfront.net/logo-image.svg" alt="Logo" class="h-10">
-      </a>
+  <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
+    <div class="container mx-auto flex items-center justify-between">
+      <a href="about.html" class="text-2xl font-bold">品牌名稱</a>
       <nav class="hidden lg:flex space-x-6">
-        <a href="about.html" class="text-gray-400 hover:text-white">關於我</a>
-        <a href="portfolio.html" class="text-gray-400 hover:text-white">作品集/專案</a>
-        <a href="blog.html" class="text-gray-400 hover:text-white">匿名雜貨店</a>
-        <a href="service.html" class="text-gray-400 hover:text-white">服務項目</a>
-        <a href="freeresource.html" class="text-gray-400 hover:text-white">免費資源</a>
-        <a href="contactme.html" class="text-gray-400 hover:text-white">聯絡我</a>
+        <a href="about.html" class="hover:text-gray-500">關於我</a>
+        <a href="porfolio.html" class="hover:text-gray-500">作品集</a>
+        <a href="blog.html" class="hover:text-gray-500">部落格</a>
+        <a href="contactme.html" class="hover:text-gray-500">聯絡我</a>
       </nav>
     </div>
   </section>
 
-  <!-- 主視覺區域 -->
-  <section class="hero relative h-96 flex items-center justify-center bg-cover bg-center">
-    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-    <div class="relative z-10 text-center text-white px-6">
-      <h1 class="text-5xl md:text-6xl font-bold">聯絡我</h1>
-      <p class="mt-4 text-lg md:text-xl">有任何問題或合作需求，請隨時聯絡我！</p>
-    </div>
-  </section>
-
   <!-- 聯絡表單 -->
-  <section class="container mx-auto py-16 px-6 max-w-2xl">
-    <div class="bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 class="text-3xl font-bold text-white">留下訊息</h2>
-      <form class="mt-6 space-y-4">
-        <div>
-          <label class="block text-gray-400">姓名</label>
-          <input type="text" class="w-full border border-gray-600 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-green-500">
-        </div>
-        <div>
-          <label class="block text-gray-400">電子郵件</label>
-          <input type="email" class="w-full border border-gray-600 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-green-500">
-        </div>
-        <div>
-          <label class="block text-gray-400">訊息</label>
-          <textarea class="w-full border border-gray-600 rounded-lg px-4 py-2 mt-1 h-32 focus:ring-2 focus:ring-green-500"></textarea>
-        </div>
-        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700">送出</button>
+  <section class="container mx-auto py-16 px-6 max-w-4xl">
+    <h1 class="text-4xl font-bold text-center mb-6">聯絡我</h1>
+    <div class="form-container mx-auto">
+      <form action="#" method="POST">
+        <label class="block text-gray-700 mb-2">姓名</label>
+        <input type="text" class="w-full p-3 border border-gray-300 rounded-lg mb-4" placeholder="請輸入您的姓名" required>
+        
+        <label class="block text-gray-700 mb-2">Email</label>
+        <input type="email" class="w-full p-3 border border-gray-300 rounded-lg mb-4" placeholder="請輸入您的 Email" required>
+        
+        <label class="block text-gray-700 mb-2">訊息</label>
+        <textarea class="w-full p-3 border border-gray-300 rounded-lg mb-4" rows="5" placeholder="請輸入您的訊息" required></textarea>
+        
+        <button type="submit" class="btn w-full">送出</button>
       </form>
     </div>
   </section>
-  <footer class="bg-gray-900 text-white py-6 mt-12">
+  
+  <!-- 頁腳 -->
+  <footer class="bg-gray-100 text-gray-800 py-6 mt-12">
     <div class="container mx-auto flex flex-col items-center space-y-4">
       <div class="flex space-x-6">
-        <a href="#" class="text-gray-400 hover:text-white">IG</a>
-        <a href="#" class="text-gray-400 hover:text-white">小紅書</a>
-        <a href="#" class="text-gray-400 hover:text-white">GitHub</a>
-        <a href="#" class="text-gray-400 hover:text-white">Email</a>
-        <a href="#" class="text-gray-400 hover:text-white">YouTube</a>
+        <a href="#" class="hover:text-gray-500">IG</a>
+        <a href="#" class="hover:text-gray-500">小紅書</a>
+        <a href="#" class="hover:text-gray-500">GitHub</a>
+        <a href="#" class="hover:text-gray-500">Email</a>
+        <a href="#" class="hover:text-gray-500">YouTube</a>
       </div>
-      <p class="text-gray-500 text-sm">&copy; 2025 品牌官網. All rights reserved.</p>
+      <p class="text-sm">&copy; 2025 品牌官網. All rights reserved.</p>
     </div>
   </footer>
 </body>

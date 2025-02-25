@@ -33,9 +33,9 @@ def freeresource():
 def new_took():
     return render_template('new_took.html')
 
-@app.route('/portfolio.html')
-def portfolio():
-    return render_template('portfolio.html')
+@app.route('/porfolio.html')
+def porfolio():
+    return render_template('porfolio.html')
 
 @app.route('/contactme.html')
 def contactme():

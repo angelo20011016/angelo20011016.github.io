@@ -3,52 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>部落格</title>
+  <title>作品集</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background-color: #FAFAFA; color: #3E2723; font-family: 'Lora', serif; }
     .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
     .hero { background: url('https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg') center/cover no-repeat; }
-    .card { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; }
+    .card { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; transition: transform 0.3s ease-in-out; }
+    .card:hover { transform: translateY(-5px); }
     .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
     .btn:hover { background: #3E2723; color: white; }
   </style>
-  <script>
-    async function fetchRSS() {
-      const rssUrl = "https://ithelp.ithome.com.tw/users/20120822/rss";
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
-      try {
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(data.contents, "text/xml");
-        const items = xml.querySelectorAll("item");
-        
-        const blogContainer = document.getElementById("blog-posts");
-        blogContainer.innerHTML = "";
-        
-        items.forEach((item, index) => {
-          if (index >= 6) return;
-          const title = item.querySelector("title").textContent;
-          const link = item.querySelector("link").textContent;
-          let description = item.querySelector("description").textContent.replace(/<[^>]+>/g, "").substring(0, 80);
-          
-          const postElement = document.createElement("div");
-          postElement.className = "card p-6";
-          postElement.innerHTML = `
-            <h3 class="text-2xl font-semibold">${title}</h3>
-            <p class="mt-2 text-gray-600">${description}...</p>
-            <a href="${link}" target="_blank" class="btn inline-block mt-4 px-4 py-2 rounded-lg">閱讀更多</a>
-          `;
-          blogContainer.appendChild(postElement);
-        });
-      } catch (error) {
-        console.error("載入 RSS 失敗", error);
-        document.getElementById("blog-posts").innerHTML = "<p class='text-center text-red-500'>載入失敗，請稍後再試。</p>";
-      }
-    }
-    window.onload = fetchRSS;
-  </script>
 </head>
 <body>
   <!-- 導航欄 -->
@@ -68,14 +33,14 @@
   <section class="hero h-96 flex items-center justify-center relative">
     <div class="absolute inset-0 bg-black bg-opacity-40"></div>
     <div class="relative z-10 text-center text-white">
-      <h1 class="text-5xl font-bold">部落格</h1>
-      <p class="mt-4 text-lg">探索我的想法與經驗分享</p>
+      <h1 class="text-5xl font-bold">作品集</h1>
+      <p class="mt-4 text-lg">探索我的創作與專案</p>
     </div>
   </section>
 
-  <!-- 文章列表 -->
+  <!-- 作品展示區 -->
   <section class="container mx-auto py-16 px-6 max-w-6xl">
-    <div id="blog-posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="porfolio-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <p class="text-center text-gray-600">載入中...</p>
     </div>
   </section>
@@ -93,5 +58,27 @@
       <p class="text-sm">&copy; 2025 品牌官網. All rights reserved.</p>
     </div>
   </footer>
+
+  <script>
+    async function loadporfolio() {
+      const response = await fetch("porfolio.json");
+      const projects = await response.json();
+      const container = document.getElementById("porfolio-list");
+      container.innerHTML = "";
+
+      projects.forEach(project => {
+        const item = `
+          <div class="card p-6">
+            <img src="${project.image}" alt="${project.title}" class="w-full rounded-lg">
+            <h3 class="text-2xl font-semibold mt-4">${project.title}</h3>
+            <p class="mt-2 text-gray-700">${project.description}</p>
+            <a href="${project.link}" class="btn mt-4 inline-block">查看作品</a>
+          </div>
+        `;
+        container.innerHTML += item;
+      });
+    }
+    loadporfolio();
+  </script>
 </body>
 </html>
