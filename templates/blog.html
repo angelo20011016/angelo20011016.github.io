@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>匿名雜貨店</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #1DB954 0%, #191414 100%);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white">
+  <!-- 導航欄 -->
+  <section class="w-full border-b border-gray-700 bg-black shadow-md">
+    <div class="container mx-auto flex items-center justify-between py-4 px-6">
+      <a href="about.html">
+        <img src="https://d22po4pjz3o32e.cloudfront.net/logo-image.svg" alt="Logo" class="h-10">
+      </a>
+      <nav class="hidden lg:flex space-x-6">
+        <a href="about.html" class="text-gray-400 hover:text-white">關於我</a>
+        <a href="portfolio.html" class="text-gray-400 hover:text-white">作品集/專案</a>
+        <a href="blog.html" class="text-gray-400 hover:text-white">匿名雜貨店</a>
+        <a href="service.html" class="text-gray-400 hover:text-white">服務項目</a>
+        <a href="freeresource.html" class="text-gray-400 hover:text-white">免費資源</a>
+        <a href="contactme.html" class="text-gray-400 hover:text-white">聯絡我</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- 主視覺區域 -->
+  <section class="hero relative h-96 flex items-center justify-center bg-cover bg-center">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="relative z-10 text-center text-white px-6">
+      <h1 class="text-5xl md:text-6xl font-bold">匿名雜貨店</h1>
+      <p class="mt-4 text-lg md:text-xl">請自由自在的留下些什麼</p>
+      <p class="mt-4 text-lg md:text-xl">Feel free to share your opinion,thoughts and everything!</p>
+    </div>
+
+  </section>
+
+  <!-- 文章列表 -->
+  <section class="container mx-auto py-16 px-6 max-w-6xl">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <img src="https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg" alt="文章 1" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h3 class="text-2xl font-semibold">文章標題 1</h3>
+          <p class="mt-2 text-gray-400">這是一篇文章的簡短介紹...</p>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <img src="https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg" alt="文章 2" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h3 class="text-2xl font-semibold">文章標題 2</h3>
+          <p class="mt-2 text-gray-400">這是一篇文章的簡短介紹...</p>
+        </div>
+      </div>
+      <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <img src="https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg" alt="文章 3" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h3 class="text-2xl font-semibold">文章標題 3</h3>
+          <p class="mt-2 text-gray-400">這是一篇文章的簡短介紹...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用者意見表單 -->
+  <section class="container mx-auto py-16 px-6 max-w-4xl">
+    <div class="bg-gray-800 rounded-lg shadow-md p-6">
+      <h2 class="text-3xl font-bold text-white">分享您的看法</h2>
+      <form id="feedback-form" class="mt-6 space-y-4">
+        <div>
+          <label class="block text-gray-400">姓名</label>
+          <input type="text" name="name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400">
+        </div>
+        <div>
+          <label class="block text-gray-400">電子郵件</label>
+          <input type="email" name="email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400">
+        </div>
+        <div>
+          <label class="block text-gray-400">您的看法</label>
+          <textarea name="feedback" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mt-1 h-32 focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700">送出</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 顯示反饋列表 -->
+  <section class="container mx-auto py-16 px-6 max-w-4xl">
+    <div class="bg-gray-800 rounded-lg shadow-md p-6">
+      <h2 class="text-3xl font-bold text-white">使用者反饋</h2>
+      <div id="feedback-list" class="mt-6 space-y-4">
+        <!-- 反饋項目將在這裡顯示 -->
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-black text-white py-6 mt-12">
+    <div class="container mx-auto flex flex-col items-center space-y-4">
+      <div class="flex space-x-6">
+        <a href="#" class="text-gray-400 hover:text-white">IG</a>
+        <a href="#" class="text-gray-400 hover:text-white">小紅書</a>
+        <a href="#" class="text-gray-400 hover:text-white">GitHub</a>
+        <a href="#" class="text-gray-400 hover:text-white">Email</a>
+        <a href="#" class="text-gray-400 hover:text-white">YouTube</a>
+      </div>
+      <p class="text-gray-500 text-sm">&copy; 2025 品牌官網. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('feedback-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        try {
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            const response = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error('提交失敗');
+            }
+
+            const result = await response.json();
+            alert('感謝您的反饋！');
+            this.reset();
+            loadFeedback();
+        } catch (error) {
+            console.error('錯誤：', error);
+            alert('提交失敗，請稍後再試。錯誤訊息：' + error.message);
+        }
+    });
+
+    async function loadFeedback() {
+        try {
+            const response = await fetch('/api/feedback');
+            if (!response.ok) {
+                throw new Error('載入失敗');
+            }
+            const feedbackList = await response.json();
+            const feedbackListElement = document.getElementById('feedback-list');
+            feedbackListElement.innerHTML = '';
+            
+            feedbackList.forEach(feedback => {
+                const feedbackElement = document.createElement('div');
+                feedbackElement.className = 'bg-gray-800 p-4 rounded-lg shadow-md mb-4';
+                feedbackElement.innerHTML = `
+                    <h3 class="text-xl font-semibold text-white">${feedback.name}</h3>
+                    <p class="text-gray-300 mt-2">${feedback.feedback}</p>
+                    <p class="text-gray-400 text-sm mt-2">${new Date(feedback.createdAt).toLocaleString()}</p>
+                `;
+                feedbackListElement.appendChild(feedbackElement);
+            });
+        } catch (error) {
+            console.error('錯誤：', error);
+            alert('載入失敗，請稍後再試');
+        }
+    }
+
+    // 初次載入
+    loadFeedback();
+  </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #1DB954 0%, #191414 100%);
+    }
+    .timer {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: red;
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white">
+  <!-- 導航欄 -->
+  <section class="w-full border-b border-gray-700 bg-black shadow-md">
+    <div class="container mx-auto flex items-center justify-between py-4 px-6">
+      <a href="about.html">
+        <img src="https://d22po4pjz3o32e.cloudfront.net/logo-image.svg" alt="Logo" class="h-10">
+      </a>
+      <nav class="hidden lg:flex space-x-6">
+        <a href="/about.html">關於我</a>
+        <a href="/portfolio.html">作品集</a>
+        <a href="/freeresource.html">免費資源</a>
+        <a href="/contactme.html">聯絡我</a>
+        <a href="/blog.html">匿名雜貨店</a>
+        <a href="/service.html">服務項目</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- 主視覺區域 -->
+  <section class="hero relative h-96 flex items-center justify-center bg-cover bg-center">
+    <div class="absolute inset-0 bg黑 bg-opacity-50"></div>
+    <div class="relative z-10 text-center text-white px-6">
+      <h1 class="text-5xl md:text-6xl font-bold">新工具</h1>
+      <p class="mt-4 text-lg md:text-xl">這是一個新的工具，幫助您完成特定任務。</p>
+    </div>
+  </section>
+
+  <!-- 工具內容 -->
+  <section class="container mx-auto py-16 px-6 max-w-4xl">
+    <div class="bg-gray-800 rounded-lg shadow-md p-6">
+      <h2 class="text-3xl font-bold text-white">計時工具</h2>
+      <div id="projects" class="mt-6 space-y-4"></div>
+      <div class="mt-6 text-center">
+        <button id="add-project-btn" class="bg-green-600 text-white px-4 py-2 rounded-full text-2xl">+</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-black text-white py-6 mt-12">
+    <div class="container mx-auto flex flex-col items-center space-y-4">
+      <div class="flex space-x-6">
+        <a href="#" class="text-gray-400 hover:text-white">IG</a>
+        <a href="#" class="text-gray-400 hover:text白">小紅書</a>
+        <a href="#" class="text-gray-400 hover:text白">GitHub</a>
+        <a href="#" class="text-gray-400 hover:text白">Email</a>
+        <a href="#" class="text-gray-400 hover:text白">YouTube</a>
+      </div>
+      <p class="text-gray-500 text-sm">&copy; 2025 品牌官網. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    let activeTimer = null;
+    let activeProjectId = null;
+
+    document.getElementById('add-project-btn').addEventListener('click', function() {
+      const projectName = prompt('請輸入項目名稱');
+      if (projectName) {
+        const projectTemplate = `
+          <div class="bg-gray-800 rounded-lg shadow-md p-6 text-center project relative">
+            <h3 class="text-2xl font-semibold">${projectName}</h3>
+            <div class="timer text-white mt-4">00:00:00</div>
+            <button class="bg-green-600 text-white px-4 py-2 rounded-lg mt-4 start-btn">開始</button>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg mt-4 settings-btn">設定</button>
+            <div class="delete-btn">x</div>
+          </div>
+        `;
+        document.getElementById('projects').insertAdjacentHTML('beforeend', projectTemplate);
+        saveProject(projectName);
+      }
+    });
+
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('start-btn')) {
+        if (activeTimer) {
+          const confirmInterrupt = confirm('專注作一件事是最高效的。如果要進行下一項任務將會暫停當前任務的計時。是否確認？');
+          if (!confirmInterrupt) {
+            return;
+          }
+          clearInterval(activeTimer);
+          activeTimer = null;
+          document.querySelector('.stop-btn').textContent = '開始';
+          document.querySelector('.stop-btn').classList.remove('stop-btn');
+          document.querySelector('.stop-btn').classList.add('start-btn');
+        }
+        startTimer(event.target);
+      }
+    });
+
+    function startTimer(button) {
+      const timerElement = button.previousElementSibling;
+      let startTime = Date.now();
+      activeTimer = setInterval(function() {
+        const elapsedTime = Date.now() - startTime;
+        const hours = Math.floor(elapsedTime / 3600000);
+        const minutes = Math.floor((elapsedTime % 3600000) / 60000);
+        const seconds = Math.floor((elapsedTime % 60000) / 1000);
+        timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }, 1000);
+
+      // 停止計時
+      button.textContent = '暫停';
+      button.classList.remove('start-btn');
+      button.classList.add('stop-btn');
+      button.addEventListener('click', function() {
+        clearInterval(activeTimer);
+        activeTimer = null;
+        button.textContent = '開始';
+        button.classList.remove('stop-btn');
+        button.classList.add('start-btn');
+      }, { once: true });
+
+      // 儲存計時狀態
+      activeProjectId = button.parentElement.querySelector('h3').textContent;
+      saveTimerState(activeProjectId, startTime);
+    }
+
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('settings-btn')) {
+        const newTime = prompt('請輸入新的提醒時間（分鐘）', '20');
+        if (newTime) {
+          alert(`新的提醒時間已設置為 ${newTime} 分鐘`);
+        }
+      }
+    });
+
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('delete-btn')) {
+        const projectElement = event.target.parentElement;
+        const projectName = projectElement.querySelector('h3').textContent;
+        projectElement.remove();
+        deleteProject(projectName);
+      }
+    });
+
+    function saveProject(projectName) {
+      fetch('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify({ name: projectName, description: '' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    function saveTimerState(projectName, startTime) {
+      fetch('/api/timer', {
+        method: 'POST',
+        body: JSON.stringify({ projectName: projectName, startTime: startTime }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    function deleteProject(projectName) {
+      fetch(`/api/projects/${projectName}`, {
+        method: 'DELETE'
+      });
+    }
+
+    // 加載用戶的項目和計時狀態
+    async function loadProjects() {
+      const response = await fetch('/api/projects');
+      const projects = await response.json();
+      projects.forEach(project => {
+        const projectTemplate = `
+          <div class="bg-gray-800 rounded-lg shadow-md p-6 text-center project relative">
+            <h3 class="text-2xl font-semibold">${project.name}</h3>
+            <div class="timer text-white mt-4">00:00:00</div>
+            <button class="bg-green-600 text-white px-4 py-2 rounded-lg mt-4 start-btn">開始</button>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg mt-4 settings-btn">設定</button>
+            <div class="delete-btn">x</div>
+          </div>
+        `;
+        document.getElementById('projects').insertAdjacentHTML('beforeend', projectTemplate);
+      });
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>
