@@ -3,10 +3,12 @@ from flask_pymongo import PyMongo
 from datetime import datetime
 import pytz
 import os
+from dotenv import load_dotenv
+load_dotenv()  # 載入 .env 檔案
 
 app = Flask(__name__)
 # MongoDB 設定 (本地)
-app.config["MONGO_URI"] = "mongodb://localhost:27017/my_website"
+app.config["MONGO_URI"] = os.getenv("MONGODB_URI", "mongodb://localhost:27017/my_website")
 mongo = PyMongo(app)
 
 # 測試資料庫連接

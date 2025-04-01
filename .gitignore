@@ -1,2 +1,5 @@
-aboutme.html
-blog1.html
+venv/
+__pycache__/
+.env
+*.pyc
+.DS_Store
