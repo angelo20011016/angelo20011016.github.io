@@ -22,7 +22,7 @@
       <a href="about.html" class="text-2xl font-bold">品牌名稱</a>
       <nav class="hidden lg:flex space-x-6">
         <a href="about.html" class="hover:text-gray-500">關於我</a>
-        <a href="porfolio.html" class="hover:text-gray-500">作品集</a>
+        <a href="portfolio.html" class="hover:text-gray-500">作品集</a>
         <a href="blog.html" class="hover:text-gray-500">部落格</a>
         <a href="contactme.html" class="hover:text-gray-500">聯絡我</a>
       </nav>
@@ -40,7 +40,7 @@
 
   <!-- 作品展示區 -->
   <section class="container mx-auto py-16 px-6 max-w-6xl">
-    <div id="porfolio-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="portfolio-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <p class="text-center text-gray-600">載入中...</p>
     </div>
   </section>
@@ -60,25 +60,36 @@
   </footer>
 
   <script>
-    async function loadporfolio() {
-      const response = await fetch("porfolio.json");
-      const projects = await response.json();
-      const container = document.getElementById("porfolio-list");
-      container.innerHTML = "";
+    async function loadportfolio() {
+      try {
+        const response = await fetch("/api/portfolio");
+        const portfolios = await response.json();
+        const container = document.getElementById("portfolio-list");
+        container.innerHTML = "";
 
-      projects.forEach(project => {
-        const item = `
-          <div class="card p-6">
-            <img src="${project.image}" alt="${project.title}" class="w-full rounded-lg">
-            <h3 class="text-2xl font-semibold mt-4">${project.title}</h3>
-            <p class="mt-2 text-gray-700">${project.description}</p>
-            <a href="${project.link}" class="btn mt-4 inline-block">查看作品</a>
-          </div>
-        `;
-        container.innerHTML += item;
-      });
+        if (portfolios.length === 0) {
+          container.innerHTML = "<p class='text-center col-span-3'>尚未添加作品</p>";
+          return;
+        }
+
+        portfolios.forEach(portfolio => {
+          const item = `
+            <div class="card p-6">
+              <img src="${portfolio.image_url || 'https://via.placeholder.com/300'}" alt="${portfolio.title}" class="w-full rounded-lg">
+              <h3 class="text-2xl font-semibold mt-4">${portfolio.title}</h3>
+              <p class="mt-2 text-gray-700">${portfolio.description}</p>
+              <a href="/portfolio/${portfolio._id}" class="btn mt-4 px-4 py-2 inline-block rounded-lg">查看作品</a>
+            </div>
+          `;
+          container.innerHTML += item;
+        });
+      } catch (error) {
+        console.error("載入作品失敗", error);
+        document.getElementById("portfolio-list").innerHTML = 
+          "<p class='text-center col-span-3 text-red-500'>載入作品失敗，請稍後再試</p>";
+      }
     }
-    loadporfolio();
+    loadportfolio();
   </script>
 </body>
 </html>
