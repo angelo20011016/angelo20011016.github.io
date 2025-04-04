@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, jsonify
+from flask import Flask, render_template, redirect, request, jsonify, session
 from flask_pymongo import PyMongo
 from datetime import datetime
 import pytz
@@ -6,10 +6,15 @@ import os
 from dotenv import load_dotenv
 load_dotenv()  # 載入 .env 檔案
 
+
+
+
+
 app = Flask(__name__)
 # MongoDB 設定 (本地)
 app.config["MONGO_URI"] = os.getenv("MONGODB_URI", "mongodb://localhost:27017/my_website")
 mongo = PyMongo(app)
+app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
 
 # 在現有的測試連接程式碼處添加更詳細的診斷
 try:
@@ -49,9 +54,9 @@ def freeresource():
 def new_took():
     return render_template('new_took.html')
 
-@app.route('/porfolio.html')
-def porfolio():
-    return render_template('porfolio.html')
+@app.route('/portfolio.html')
+def portfolio():
+    return render_template('portfolio.html')
 
 @app.route('/contactme.html')
 def contactme():
@@ -143,7 +148,101 @@ def create_portfolio():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/portfolio/<portfolio_id>')
+def portfolio_detail(portfolio_id):
+    try:
+        from bson.objectid import ObjectId
+        # 查詢特定ID的作品
+        portfolio = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
+        if portfolio:
+            # 轉換ID格式
+            portfolio['_id'] = str(portfolio['_id'])
+            # 渲染模板並傳入資料
+            return render_template('portfolio_detail.html', portfolio=portfolio)
+        else:
+            # 找不到作品時重定向
+            return redirect('/portfolio.html')
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return redirect('/portfolio.html')
 
+
+# 作品集 API - 更新作品
+@app.route('/api/portfolio/<portfolio_id>', methods=['PUT'])
+def update_portfolio(portfolio_id):
+    try:
+        from bson.objectid import ObjectId
+        data = request.json
+        
+        # 驗證作品是否存在
+        existing = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
+        if not existing:
+            return jsonify({'error': '找不到該作品'}), 404
+            
+        # 更新資料
+        update_data = {}
+        allowed_fields = ['title', 'description', 'image_url', 'github_url', 'demo_url', 'tags']
+        for field in allowed_fields:
+            if field in data:
+                update_data[field] = data[field]
+                
+        # 添加更新時間
+        update_data['updated_at'] = datetime.now(pytz.utc)
+        
+        # 更新資料庫
+        mongo.db.portfolio.update_one(
+            {'_id': ObjectId(portfolio_id)},
+            {'$set': update_data}
+        )
+        
+        return jsonify({'message': '作品更新成功'}), 200
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# 作品集 API - 刪除作品
+@app.route('/api/portfolio/<portfolio_id>', methods=['DELETE'])
+def delete_portfolio(portfolio_id):
+    try:
+        from bson.objectid import ObjectId
+        
+        # 驗證作品是否存在
+        existing = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
+        if not existing:
+            return jsonify({'error': '找不到該作品'}), 404
+        
+        # 從資料庫刪除
+        mongo.db.portfolio.delete_one({'_id': ObjectId(portfolio_id)})
+        
+        return jsonify({'message': '作品刪除成功'}), 200
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+# 後台登入頁面
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # 檢查憑證 (暫時使用簡單方式，未來應改為更安全的方式)
+        if username == os.getenv('ADMIN_USER') and password == os.getenv('ADMIN_PASSWORD'):
+            session['admin_logged_in'] = True
+            return redirect('/admin')
+        else:
+            return render_template('admin_login.html', error='用戶名或密碼錯誤')
+            
+    return render_template('admin_login.html')
+
+# 保護後台路由
+@app.route('/admin')
+def admin_page():
+    if not session.get('admin_logged_in'):
+        return redirect('/admin/login')
+    return render_template('admin.html')
 
 
 if __name__ == '__main__':
