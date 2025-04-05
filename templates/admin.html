@@ -26,6 +26,44 @@
             margin-top: 10px;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // 初始化新增作品編輯器
+          window.quillEditor = new Quill('#content-editor', {
+            theme: 'snow',
+            modules: {
+              toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'script': 'sub' }, { 'script': 'super' }],
+                [{ 'indent': '-1' }, { 'indent': '+1' }],
+                ['link', 'image'],
+                ['clean']
+              ]
+            },
+            placeholder: '撰寫詳細內容...'
+          });
+          
+          // 初始化編輯模式編輯器
+          window.quillEditorEdit = new Quill('#edit_content-editor', {
+            theme: 'snow',
+            modules: {
+              toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'script': 'sub' }, { 'script': 'super' }],
+                [{ 'indent': '-1' }, { 'indent': '+1' }],
+                ['link', 'image'],
+                ['clean']
+              ]
+            }
+          });
+        });
+      </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -42,6 +80,12 @@
                 <div class="mb-3">
                     <label for="description" class="form-label">描述*</label>
                     <textarea class="form-control" id="description" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="content-editor" class="form-label">詳細內容</label>
+                    <div id="content-editor" style="height: 300px; border-radius: 0.25rem;"></div>
+                    <input type="hidden" id="content">
+                    <div class="form-text">使用編輯器添加格式化內容、圖片和連結等</div>
                 </div>
                 <div class="mb-3">
                     <label for="image_url" class="form-label">圖片連結</label>
@@ -89,6 +133,11 @@
                             <textarea class="form-control" id="edit_description" rows="3" required></textarea>
                         </div>
                         <div class="mb-3">
+                            <label for="edit_content-editor" class="form-label">詳細內容</label>
+                            <div id="edit_content-editor" style="height: 300px; border-radius: 0.25rem;"></div>
+                            <input type="hidden" id="edit_content">
+                        </div>
+                        <div class="mb-3">
                             <label for="edit_image_url" class="form-label">圖片連結</label>
                             <input type="url" class="form-control" id="edit_image_url">
                             <div id="edit_imagePreview"></div>
@@ -117,6 +166,8 @@
 
     <!-- Bootstrap 與 JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>  
     <script>
         // 當頁面加載完成時執行
         document.addEventListener('DOMContentLoaded', function() {
@@ -174,6 +225,9 @@
         
         // 新增作品
         function addPortfolio() {
+            const contentDelta = window.quillEditor.getContents();
+            const contentHtml = window.quillEditor.root.innerHTML;
+    
             const title = document.getElementById('title').value;
             const description = document.getElementById('description').value;
             const image_url = document.getElementById('image_url').value;
@@ -186,6 +240,7 @@
             const data = {
                 title,
                 description,
+                content: contentHtml,
                 image_url,
                 github_url,
                 demo_url,
@@ -204,6 +259,7 @@
                 alert('作品新增成功');
                 document.getElementById('addPortfolioForm').reset();
                 document.getElementById('imagePreview').innerHTML = '';
+                window.quillEditor.setText('');  // 清空編輯器
                 fetchPortfolios();
             })
             .catch(error => {
@@ -255,6 +311,13 @@
                     document.getElementById('edit_demo_url').value = portfolio.demo_url || '';
                     document.getElementById('edit_tags').value = portfolio.tags ? portfolio.tags.join(', ') : '';
                     
+                    // 設置 Quill 編輯器內容
+                    if (window.quillEditorEdit) {
+                        // 清空編輯器，然後設置內容
+                        window.quillEditorEdit.root.innerHTML = portfolio.content || '';
+                    }
+                    
+                    // 處理圖片預覽
                     if (portfolio.image_url) {
                         document.getElementById('edit_imagePreview').innerHTML = 
                             `<img src="${portfolio.image_url}" class="preview-image">`;
@@ -269,9 +332,11 @@
                     alert('無法獲取作品資訊');
                 });
         }
-        
         // 保存編輯
         function saveEdit() {
+             // 從 Quill 獲取內容
+            const contentHtml = window.quillEditorEdit.root.innerHTML;
+            
             const id = document.getElementById('edit_id').value;
             const title = document.getElementById('edit_title').value;
             const description = document.getElementById('edit_description').value;
@@ -285,6 +350,7 @@
             const data = {
                 title,
                 description,
+                content: contentHtml,
                 image_url,
                 github_url,
                 demo_url,

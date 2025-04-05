@@ -129,6 +129,7 @@ def create_portfolio():
         portfolio = {
             'title': data['title'],
             'description': data['description'],
+            'content': data.get('content', ''),  # 新增: 富文本內容欄位
             'image_url': data.get('image_url', ''),
             'github_url': data.get('github_url', ''),
             'demo_url': data.get('demo_url', ''),
@@ -166,6 +167,37 @@ def portfolio_detail(portfolio_id):
         print(f"Error: {str(e)}")
         return redirect('/portfolio.html')
 
+# 在 update_portfolio 函數前添加這個路由
+
+@app.route('/api/portfolio/<portfolio_id>', methods=['GET'])
+def get_single_portfolio(portfolio_id):
+    try:
+        from bson.objectid import ObjectId
+        
+        # 查詢單個作品
+        portfolio = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
+        
+        if not portfolio:
+            return jsonify({'error': '找不到該作品'}), 404
+            
+        # 將 ObjectId 轉換為字符串
+        portfolio['_id'] = str(portfolio['_id'])
+        
+        # 轉換日期為字符串
+        if 'created_at' in portfolio:
+            portfolio['created_at'] = portfolio['created_at'].isoformat()
+        if 'updated_at' in portfolio:
+            portfolio['updated_at'] = portfolio['updated_at'].isoformat()
+            
+        # 返回作品數據
+        return jsonify(portfolio)
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+
 
 # 作品集 API - 更新作品
 @app.route('/api/portfolio/<portfolio_id>', methods=['PUT'])
@@ -181,7 +213,7 @@ def update_portfolio(portfolio_id):
             
         # 更新資料
         update_data = {}
-        allowed_fields = ['title', 'description', 'image_url', 'github_url', 'demo_url', 'tags']
+        allowed_fields = ['title', 'description','content', 'image_url', 'github_url', 'demo_url', 'tags']
         for field in allowed_fields:
             if field in data:
                 update_data[field] = data[field]

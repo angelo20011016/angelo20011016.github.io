@@ -12,12 +12,13 @@
     .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
     .btn:hover { background: #3E2723; color: white; }
   </style>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
 </head>
 <body>
   <!-- 導航欄 -->
   <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
     <div class="container mx-auto flex items-center justify-between">
-      <a href="/about.html" class="text-2xl font-bold">米歇爾Angelo Lab</a>
+      <a href="/about.html" class="text-2xl font-bold">Angeloange</a>
       <nav class="hidden lg:flex space-x-6">
         <a href="/about.html" class="hover:text-gray-500">關於我</a>
         <a href="/portfolio.html" class="hover:text-gray-500">作品集</a>
@@ -48,10 +49,16 @@
       <img src="{{ portfolio.image_url }}" alt="{{ portfolio.title }}" class="w-full rounded-lg mt-6">
       {% endif %}
       
+      <!-- 富文本內容區域 -->
       <div class="mt-8 prose prose-slate max-w-none">
         <p>{{ portfolio.description }}</p>
+        
+        {% if portfolio.content %}
+        <div class="mt-8 rich-content ql-editor">
+            {{ portfolio.content|safe }}
+        </div>
+        {% endif %}
       </div>
-      
       <div class="mt-8 flex gap-4">
         {% if portfolio.github_url %}
         <a href="{{ portfolio.github_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">查看原始碼</a>
