@@ -8,7 +8,11 @@
   <style>
     body { background-color: #FAFAFA; color: #3E2723; font-family: 'Lora', serif; }
     .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
-    .content-container { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; }
+    .content-container img:first-of-type {
+      max-height: 400px;
+      width: 100%;
+      object-fit: contain;
+    }    
     .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
     .btn:hover { background: #3E2723; color: white; }
   </style>
@@ -61,11 +65,11 @@
       </div>
       <div class="mt-8 flex gap-4">
         {% if portfolio.github_url %}
-        <a href="{{ portfolio.github_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">查看原始碼</a>
+        <a href="{{ portfolio.github_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">Github連結</a>
         {% endif %}
         
         {% if portfolio.demo_url %}
-        <a href="{{ portfolio.demo_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">查看演示</a>
+        <a href="{{ portfolio.demo_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">Demo影片</a>
         {% endif %}
       </div>
     </div>

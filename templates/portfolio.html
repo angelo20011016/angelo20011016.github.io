@@ -13,6 +13,12 @@
     .card:hover { transform: translateY(-5px); }
     .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
     .btn:hover { background: #3E2723; color: white; }
+    .card img {
+      width: 100%;         /* 寬度統一佔滿卡片 */
+      height: 220px;       /* 高度固定 */
+      object-fit: cover;   /* 裁切並保持覆蓋 */
+      object-position: center; /* 居中裁切 */
+    }
   </style>
 </head>
 <body>
