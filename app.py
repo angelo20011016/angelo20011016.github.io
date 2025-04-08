@@ -134,7 +134,8 @@ def get_portfolio():
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# 作品集 API - 新增作品
+# 修復 create_portfolio 函數
+
 @app.route('/api/portfolio', methods=['POST'])
 def create_portfolio():
     try:
@@ -144,32 +145,32 @@ def create_portfolio():
         required_fields = ['title', 'description']
         if not all(field in data for field in required_fields):
             missing = [field for field in required_fields if field not in data]
-            return jsonify({'error': f'缺少必要欄位: {", ".join(missing)}'}), 400
+            return jsonify({'success': False, 'message': f'缺少必要欄位: {", ".join(missing)}'}), 400
         
         # 準備資料
         portfolio = {
             'title': data['title'],
             'description': data['description'],
-            'content': data.get('content', ''),  # 新增: 富文本內容欄位
             'image_url': data.get('image_url', ''),
-            'github_url': data.get('github_url', ''),
+            'github_url': data.get('github_url', data.get('project_url', '')),
             'demo_url': data.get('demo_url', ''),
             'tags': data.get('tags', []),
-            'created_at': datetime.now(pytz.utc)
+            'created_at': datetime.now()
         }
         
         # 儲存到資料庫
         result = mongo.db.portfolio.insert_one(portfolio)
         
+        # 返回成功的 JSON 響應
         return jsonify({
+            'success': True,
             'message': '作品新增成功',
             'id': str(result.inserted_id)
         }), 201
+        
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
+        print(f"創建作品錯誤: {str(e)}")
+        return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
 # 電子報訂閱 API 端點
 @app.route('/api/subscribe', methods=['POST'])
 def subscribe_newsletter():
@@ -356,38 +357,29 @@ def portfolio_detail(portfolio_id):
         return redirect('/portfolio.html')
 
 # 在 update_portfolio 函數前添加這個路由
-
 @app.route('/api/portfolio/<portfolio_id>', methods=['GET'])
 def get_single_portfolio(portfolio_id):
     try:
         from bson.objectid import ObjectId
-        
-        # 查詢單個作品
+        # 查詢特定ID的作品
         portfolio = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
-        
-        if not portfolio:
+        if portfolio:
+            # 轉換ID格式
+            portfolio['_id'] = str(portfolio['_id'])
+            # 轉換時間格式
+            if 'created_at' in portfolio and portfolio['created_at']:
+                portfolio['created_at'] = portfolio['created_at'].isoformat()
+            if 'updated_at' in portfolio and portfolio['updated_at']:
+                portfolio['updated_at'] = portfolio['updated_at'].isoformat()
+            # 返回作品數據
+            return jsonify(portfolio)
+        else:
             return jsonify({'error': '找不到該作品'}), 404
-            
-        # 將 ObjectId 轉換為字符串
-        portfolio['_id'] = str(portfolio['_id'])
-        
-        # 轉換日期為字符串
-        if 'created_at' in portfolio:
-            portfolio['created_at'] = portfolio['created_at'].isoformat()
-        if 'updated_at' in portfolio:
-            portfolio['updated_at'] = portfolio['updated_at'].isoformat()
-            
-        # 返回作品數據
-        return jsonify(portfolio)
-        
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"獲取作品詳情錯誤: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-
-
-
-# 作品集 API - 更新作品
+# 完成 update_portfolio 函數
 @app.route('/api/portfolio/<portfolio_id>', methods=['PUT'])
 def update_portfolio(portfolio_id):
     try:
@@ -397,17 +389,17 @@ def update_portfolio(portfolio_id):
         # 驗證作品是否存在
         existing = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
         if not existing:
-            return jsonify({'error': '找不到該作品'}), 404
+            return jsonify({'success': False, 'message': '找不到該作品'}), 404
             
         # 更新資料
         update_data = {}
-        allowed_fields = ['title', 'description','content', 'image_url', 'github_url', 'demo_url', 'tags']
+        allowed_fields = ['title', 'description', 'image_url', 'github_url', 'demo_url', 'tags']
         for field in allowed_fields:
             if field in data:
                 update_data[field] = data[field]
                 
         # 添加更新時間
-        update_data['updated_at'] = datetime.now(pytz.utc)
+        update_data['updated_at'] = datetime.now()
         
         # 更新資料庫
         mongo.db.portfolio.update_one(
@@ -415,11 +407,11 @@ def update_portfolio(portfolio_id):
             {'$set': update_data}
         )
         
-        return jsonify({'message': '作品更新成功'}), 200
+        return jsonify({'success': True, 'message': '作品更新成功'}), 200
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
+        print(f"更新作品錯誤: {str(e)}")
+        return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
+    
 # 作品集 API - 刪除作品
 @app.route('/api/portfolio/<portfolio_id>', methods=['DELETE'])
 def delete_portfolio(portfolio_id):
