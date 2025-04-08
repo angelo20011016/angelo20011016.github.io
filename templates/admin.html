@@ -260,11 +260,19 @@
                     <label for="title" class="form-label">標題</label>
                     <input type="text" class="form-control" id="title" name="title" required>
                   </div>
-                  <div class="mb-3">
-                    <label for="description" class="form-label">描述</label>
-                    <textarea class="form-control" id="description" name="description" rows="8" required></textarea>
-                    <small class="text-muted">支持HTML格式和富文本編輯</small>
-                  </div>
+                  <!-- 修改描述欄位，使用普通文本框 -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">簡短描述</label>
+                    <input type="text" class="form-control" id="description" name="description" maxlength="150" required>
+                    <small class="text-muted">簡短描述作品內容，最多150字，將顯示在作品列表中</small>
+                </div>
+                
+                <!-- 新增詳細內容欄位，使用富文本編輯器 -->
+                <div class="mb-3">
+                    <label for="detail_content" class="form-label">詳細內容</label>
+                    <textarea class="form-control" id="detail_content" name="detail_content" rows="10"></textarea>
+                    <small class="text-muted">作品的詳細介紹，支持HTML格式和富文本編輯</small>
+                </div>
                   <div class="mb-3">
                     <label for="image_url" class="form-label">圖片網址</label>
                     <input type="url" class="form-control" id="image_url" name="image_url">
@@ -344,34 +352,42 @@
           <h5 class="modal-title" id="editPortfolioModalLabel">編輯作品</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+        <!-- 在編輯模態框中添加 detail_content 欄位 -->
+
         <div class="modal-body">
-          <form id="editPortfolioForm">
+            <form id="editPortfolioForm">
             <input type="hidden" id="edit-portfolio-id">
             <div class="mb-3">
-              <label for="edit-title" class="form-label">標題</label>
-              <input type="text" class="form-control" id="edit-title" name="title" required>
+                <label for="edit-title" class="form-label">標題</label>
+                <input type="text" class="form-control" id="edit-title" name="title" required>
             </div>
             <div class="mb-3">
-              <label for="edit-description" class="form-label">描述</label>
-              <textarea class="form-control" id="edit-description" name="description" rows="8" required></textarea>
+                <label for="edit-description" class="form-label">簡短描述</label>
+                <input type="text" class="form-control" id="edit-description" name="description" maxlength="150" required>
+                <small class="text-muted">簡短描述作品內容，最多150字，將顯示在作品列表中</small>
             </div>
             <div class="mb-3">
-              <label for="edit-image_url" class="form-label">圖片網址</label>
-              <input type="url" class="form-control" id="edit-image_url" name="image_url">
+                <label for="edit-detail_content" class="form-label">詳細內容</label>
+                <textarea class="form-control" id="edit-detail_content" name="detail_content" rows="8"></textarea>
+                <small class="text-muted">作品的詳細介紹，支援HTML格式和富文本編輯</small>
             </div>
             <div class="mb-3">
-              <label for="edit-github_url" class="form-label">GitHub 連結</label>
-              <input type="url" class="form-control" id="edit-github_url" name="github_url">
+                <label for="edit-image_url" class="form-label">圖片網址</label>
+                <input type="url" class="form-control" id="edit-image_url" name="image_url">
             </div>
             <div class="mb-3">
-              <label for="edit-demo_url" class="form-label">Demo 連結</label>
-              <input type="url" class="form-control" id="edit-demo_url" name="demo_url">
+                <label for="edit-github_url" class="form-label">GitHub 連結</label>
+                <input type="url" class="form-control" id="edit-github_url" name="github_url">
             </div>
             <div class="mb-3">
-              <label for="edit-tags" class="form-label">標籤 (以逗號分隔)</label>
-              <input type="text" class="form-control" id="edit-tags" name="tags">
+                <label for="edit-demo_url" class="form-label">Demo 連結</label>
+                <input type="url" class="form-control" id="edit-demo_url" name="demo_url">
             </div>
-          </form>
+            <div class="mb-3">
+                <label for="edit-tags" class="form-label">標籤 (以逗號分隔)</label>
+                <input type="text" class="form-control" id="edit-tags" name="tags">
+            </div>
+            </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -389,25 +405,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log("頁面已完全載入");
       
-      // 初始化富文本編輯器
-      tinymce.init({
-        selector: '#description',
-        height: 300,
-        plugins: 'advlist autolink lists link image charmap print preview anchor ' +
-                'searchreplace visualblocks code fullscreen ' +
-                'insertdatetime media table paste code help wordcount',
-        toolbar: 'undo redo | formatselect | ' +
-                'bold italic backcolor | alignleft aligncenter ' +
-                'alignright alignjustify | bullist numlist outdent indent | ' +
-                'removeformat | help',
-        language: 'zh_TW',
-        menubar: 'file edit view insert format tools table help',
-        content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; }'
-      });
-      
       // 為編輯模態框也初始化富文本編輯器
       tinymce.init({
-        selector: '#edit-description',
+        selector: '#detail_content',
         height: 300,
         plugins: 'advlist autolink lists link image charmap print preview anchor ' +
                 'searchreplace visualblocks code fullscreen ' +
@@ -501,32 +501,30 @@
     });
     // 直接處理表單提交
     function submitPortfolio() {
-    console.log("表單提交函數觸發");
-    
-    const title = document.getElementById('title').value;
-    
-    // 嘗試獲取富文本編輯器內容
-    let description = "";
-    try {
-        const editor = tinymce.get('description');
-        if (editor) {
-        description = editor.getContent();
-        } else {
-        description = document.getElementById('description').value;
-        alert("警告：編輯器未初始化，將使用純文本");
+        console.log("表單提交函數觸發");
+        
+        // 獲取普通描述
+        const description = document.getElementById('description').value;
+        
+        // 獲取富文本詳細內容
+        let detailContent = "";
+        try {
+            const editor = tinymce.get('detail_content');
+            if (editor) {
+            detailContent = editor.getContent();
+            }
+        } catch (err) {
+            console.error("獲取富文本內容錯誤:", err);
         }
-    } catch (err) {
-        console.error("獲取富文本內容錯誤:", err);
-        description = document.getElementById('description').value;
-    }
-    
-    const formData = {
-        title: title,
-        description: description,
-        image_url: document.getElementById('image_url').value,
-        github_url: document.getElementById('project_url').value,
-        tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
-    };
+        
+        const formData = {
+            title: document.getElementById('title').value,
+            description: description,  // 普通文本簡短描述
+            detail_content: detailContent,  // 富文本詳細內容
+            image_url: document.getElementById('image_url').value,
+            github_url: document.getElementById('project_url').value,
+            tags: document.getElementById('tags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+        };
     
     console.log("提交的表單數據:", formData);
     
@@ -896,91 +894,122 @@
     }
     
     // 編輯作品
+    // 修改 editPortfolio 函數
+
     function editPortfolio(id) {
-      console.log("編輯作品:", id);
-      
-      fetch(`/api/portfolio/${id}`)
-        .then(response => {
-          console.log("編輯作品API響應狀態:", response.status);
-          return response.json();
+        console.log("編輯作品:", id);
+        
+        fetch(`/api/portfolio/${id}`)
+            .then(response => {
+            console.log("編輯作品API響應狀態:", response.status);
+            return response.json();
+            })
+            .then(portfolio => {
+            console.log("載入作品詳情:", portfolio);
+            
+            // 填充表單
+            document.getElementById('edit-portfolio-id').value = portfolio._id;
+            document.getElementById('edit-title').value = portfolio.title;
+            
+            // 簡短描述使用普通輸入框
+            document.getElementById('edit-description').value = portfolio.description || '';
+            
+            // 詳細內容使用富文本編輯器
+            try {
+                const editor = tinymce.get('edit-detail_content');
+                if (editor) {
+                editor.setContent(portfolio.detail_content || '');
+                }
+            } catch(err) {
+                console.error("設置富文本內容錯誤:", err);
+            }
+            
+            document.getElementById('edit-image_url').value = portfolio.image_url || '';
+            document.getElementById('edit-github_url').value = portfolio.github_url || '';
+            document.getElementById('edit-demo_url').value = portfolio.demo_url || '';
+            
+            // 標籤處理
+            if (portfolio.tags && Array.isArray(portfolio.tags)) {
+                document.getElementById('edit-tags').value = portfolio.tags.join(', ');
+            } else {
+                document.getElementById('edit-tags').value = '';
+            }
+            
+            // 顯示模態框
+            const editModal = new bootstrap.Modal(document.getElementById('editPortfolioModal'));
+            editModal.show();
+            })
+            .catch(error => {
+            console.error('獲取作品詳情失敗:', error);
+            alert('無法獲取作品詳情，請稍後再試');
+            });
+        }
+    // 保存編輯後的作品
+    // 修改 saveEditedPortfolio 函數
+
+    function saveEditedPortfolio() {
+        const portfolioId = document.getElementById('edit-portfolio-id').value;
+        console.log("儲存編輯的作品:", portfolioId);
+        
+        // 從普通輸入框獲取簡短描述
+        const description = document.getElementById('edit-description').value;
+        
+        // 從富文本編輯器獲取詳細內容
+        let detailContent = '';
+        try {
+            const editor = tinymce.get('edit-detail_content');
+            if (editor) {
+            detailContent = editor.getContent();
+            }
+        } catch (err) {
+            console.error("獲取富文本內容錯誤:", err);
+        }
+        
+        const formData = {
+            title: document.getElementById('edit-title').value,
+            description: description,
+            detail_content: detailContent,
+            image_url: document.getElementById('edit-image_url').value,
+            github_url: document.getElementById('edit-github_url').value,
+            demo_url: document.getElementById('edit-demo_url').value,
+            tags: document.getElementById('edit-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+        };
+        
+        console.log("提交的編輯資料:", formData);
+        
+        fetch(`/api/portfolio/${portfolioId}`, {
+            method: 'PUT',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
         })
-        .then(portfolio => {
-          console.log("載入作品詳情:", portfolio);
-          
-          // 填充表單
-          document.getElementById('edit-portfolio-id').value = portfolio._id;
-          document.getElementById('edit-title').value = portfolio.title;
-          tinymce.get('edit-description').setContent(portfolio.description || '');
-          document.getElementById('edit-image_url').value = portfolio.image_url || '';
-          document.getElementById('edit-github_url').value = portfolio.github_url || '';
-          document.getElementById('edit-demo_url').value = portfolio.demo_url || '';
-          
-          // 標籤處理
-          if (portfolio.tags && Array.isArray(portfolio.tags)) {
-            document.getElementById('edit-tags').value = portfolio.tags.join(', ');
-          } else {
-            document.getElementById('edit-tags').value = '';
-          }
-          
-          // 顯示模態框
-          const editModal = new bootstrap.Modal(document.getElementById('editPortfolioModal'));
-          editModal.show();
+        .then(response => {
+            console.log("編輯API響應狀態:", response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("編輯API響應資料:", data);
+            
+            if (data.success) {
+            // 關閉模態框
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editPortfolioModal'));
+            editModal.hide();
+            
+            // 顯示成功消息
+            alert('作品更新成功');
+            
+            // 重新載入作品列表
+            loadPortfolioItems();
+            } else {
+            alert('更新失敗: ' + (data.message || '未知錯誤'));
+            }
         })
         .catch(error => {
-          console.error('獲取作品詳情失敗:', error);
-          alert('無法獲取作品詳情，請稍後再試');
+            console.error('更新作品失敗:', error);
+            alert('發生錯誤，請稍後再試');
         });
-    }
-    
-    // 保存編輯後的作品
-    function saveEditedPortfolio() {
-      const portfolioId = document.getElementById('edit-portfolio-id').value;
-      console.log("儲存編輯的作品:", portfolioId);
-      
-      const formData = {
-        title: document.getElementById('edit-title').value,
-        description: tinymce.get('edit-description').getContent(),
-        image_url: document.getElementById('edit-image_url').value,
-        github_url: document.getElementById('edit-github_url').value,
-        demo_url: document.getElementById('edit-demo_url').value,
-        tags: document.getElementById('edit-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
-      };
-      
-      console.log("提交的編輯資料:", formData);
-      
-      fetch(`/api/portfolio/${portfolioId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      })
-      .then(response => {
-        console.log("編輯API響應狀態:", response.status);
-        return response.json();
-      })
-      .then(data => {
-        console.log("編輯API響應資料:", data);
-        
-        if (data.success) {
-          // 關閉模態框
-          const editModal = bootstrap.Modal.getInstance(document.getElementById('editPortfolioModal'));
-          editModal.hide();
-          
-          // 顯示成功消息
-          alert('作品更新成功');
-          
-          // 重新載入作品列表
-          loadPortfolioItems();
-        } else {
-          alert('更新失敗: ' + (data.message || '未知錯誤'));
         }
-      })
-      .catch(error => {
-        console.error('更新作品失敗:', error);
-        alert('發生錯誤，請稍後再試');
-      });
-    }
   </script>
 </body>
 </html>

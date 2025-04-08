@@ -134,7 +134,8 @@ def get_portfolio():
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# 修復 create_portfolio 函數
+
+# 修改 create_portfolio 函數
 
 @app.route('/api/portfolio', methods=['POST'])
 def create_portfolio():
@@ -147,10 +148,11 @@ def create_portfolio():
             missing = [field for field in required_fields if field not in data]
             return jsonify({'success': False, 'message': f'缺少必要欄位: {", ".join(missing)}'}), 400
         
-        # 準備資料
+        # 準備資料 - 添加詳細內容欄位
         portfolio = {
             'title': data['title'],
-            'description': data['description'],
+            'description': data.get('description', ''),  # 簡短描述
+            'detail_content': data.get('detail_content', ''),  # 新增：詳細內容，使用富文本
             'image_url': data.get('image_url', ''),
             'github_url': data.get('github_url', data.get('project_url', '')),
             'demo_url': data.get('demo_url', ''),
@@ -171,6 +173,8 @@ def create_portfolio():
     except Exception as e:
         print(f"創建作品錯誤: {str(e)}")
         return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
+
+
 # 電子報訂閱 API 端點
 @app.route('/api/subscribe', methods=['POST'])
 def subscribe_newsletter():
@@ -380,6 +384,7 @@ def get_single_portfolio(portfolio_id):
         return jsonify({'error': str(e)}), 500
 
 # 完成 update_portfolio 函數
+
 @app.route('/api/portfolio/<portfolio_id>', methods=['PUT'])
 def update_portfolio(portfolio_id):
     try:
@@ -393,7 +398,7 @@ def update_portfolio(portfolio_id):
             
         # 更新資料
         update_data = {}
-        allowed_fields = ['title', 'description', 'image_url', 'github_url', 'demo_url', 'tags']
+        allowed_fields = ['title', 'description', 'detail_content', 'image_url', 'github_url', 'demo_url', 'tags']
         for field in allowed_fields:
             if field in data:
                 update_data[field] = data[field]
@@ -411,25 +416,20 @@ def update_portfolio(portfolio_id):
     except Exception as e:
         print(f"更新作品錯誤: {str(e)}")
         return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
-    
 # 作品集 API - 刪除作品
 @app.route('/api/portfolio/<portfolio_id>', methods=['DELETE'])
 def delete_portfolio(portfolio_id):
     try:
         from bson.objectid import ObjectId
+        result = mongo.db.portfolio.delete_one({'_id': ObjectId(portfolio_id)})
         
-        # 驗證作品是否存在
-        existing = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
-        if not existing:
-            return jsonify({'error': '找不到該作品'}), 404
-        
-        # 從資料庫刪除
-        mongo.db.portfolio.delete_one({'_id': ObjectId(portfolio_id)})
-        
-        return jsonify({'message': '作品刪除成功'}), 200
+        if result.deleted_count > 0:
+            return jsonify({'success': True, 'message': '作品刪除成功'}), 200
+        else:
+            return jsonify({'success': False, 'message': '找不到該作品'}), 404
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        print(f"刪除作品錯誤: {str(e)}")
+        return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
 
 
 
@@ -664,43 +664,6 @@ def get_recent_activities():
     except Exception as e:
         print(f"獲取最近活動失敗: {str(e)}")
         return jsonify([]), 500
-
-@app.route('/api/diagnostics/db')
-def db_diagnostics():
-    """診斷端點，檢查數據庫連接"""
-    try:
-        # 基本連接資訊
-        result = {
-            'status': 'connected',
-            'db_name': mongo.db.name,
-            'collections': [],
-            'portfolio_count': 0
-        }
-        
-        # 獲取集合列表
-        try:
-            collections = mongo.db.list_collection_names()
-            result['collections'] = collections
-            
-            # 如果有portfolio集合，查詢文檔數量
-            if 'portfolio' in collections:
-                result['portfolio_count'] = mongo.db.portfolio.count_documents({})
-                
-                # 獲取一個樣本文檔
-                sample = mongo.db.portfolio.find_one()
-                if sample:
-                    result['sample_id'] = str(sample['_id'])
-                    result['sample_title'] = sample.get('title', '無標題')
-        except Exception as e:
-            result['collections_error'] = str(e)
-            
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e),
-            'uri_prefix': mongodb_uri[:15] + '...' if mongodb_uri else 'None'
-        })
 
 
 
