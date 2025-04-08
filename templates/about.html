@@ -458,7 +458,7 @@
       const portfolios = await response.json();
       
       // 只取前3個作品
-      const featuredItems = portfolios.slice(0, 3);
+      const featuredItems = portfolios;
       
       if (featuredItems.length === 0) {
         document.getElementById('carousel-container').innerHTML = 
