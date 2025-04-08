@@ -15,13 +15,9 @@ app = Flask(__name__)
 # MongoDB 設定 (本地)
 
 # 判斷環境使用對應的MongoDB連接
-if os.getenv('RAILWAY_ENVIRONMENT'):
-    # 生產環境 - Railway
-    mongodb_uri = os.getenv('MONGODB_URL_PROD')
-else:
-    # 開發環境 - 本地
-    mongodb_uri = os.getenv('MONGODB_URL_DEV')
-
+mongodb_uri = os.getenv('MONGODB_URI') or os.getenv('MONGODB_URL_PROD')
+if not mongodb_uri:
+    mongodb_uri = os.getenv('MONGODB_URL_DEV', 'mongodb://localhost:27017/my_website')
 app.config["MONGO_URI"] = mongodb_uri
 mongo = PyMongo(app)
 app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
