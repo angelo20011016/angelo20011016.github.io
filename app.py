@@ -12,18 +12,26 @@ load_dotenv()  # 載入 .env 檔案
 
 
 app = Flask(__name__)
-# MongoDB 設定 (本地)
 
-# 判斷環境使用對應的MongoDB連接
-mongodb_uri = os.getenv('MONGODB_URI') or os.getenv('MONGODB_URL_PROD')
+# 優先使用MongoDB Atlas連接字串
+mongodb_uri = os.getenv('MONGODB_URI')
 if not mongodb_uri:
+    # 如果找不到MONGODB_URI，嘗試其他環境變數
+    mongodb_uri = os.getenv('MONGODB_URL_PROD')
+if not mongodb_uri:
+    # 最後使用本地連接
     mongodb_uri = os.getenv('MONGODB_URL_DEV', 'mongodb://localhost:27017/my_website')
 
-# 確保 URI 包含數據庫名稱
-if mongodb_uri and '/' not in mongodb_uri.split('://')[-1]:
-    mongodb_uri += '/my_website'  # 添加默認數據庫名稱
+# 確保URI包含數據庫名稱
+if mongodb_uri and 'mongodb+srv' in mongodb_uri and '/my_website' not in mongodb_uri:
+    if '?' in mongodb_uri:
+        mongodb_uri = mongodb_uri.replace('?', '/my_website?')
+    else:
+        mongodb_uri = f"{mongodb_uri}/my_website"
 
+print(f"嘗試連接到: {mongodb_uri[:30]}...")
 
+# 設定MongoDB連接
 app.config["MONGO_URI"] = mongodb_uri
 mongo = PyMongo(app)
 app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
@@ -112,12 +120,13 @@ def get_feedback():
 @app.route('/api/portfolio', methods=['GET'])
 def get_portfolio():
     try:
-        portfolios = list(mongo.db.portfolio.find().sort('created_at', -1))
+        # 修復sort()語法，使用列表而非位置參數
+        portfolios = list(mongo.db.portfolio.find().sort([('created_at', -1)]))
         
         # 轉換 ObjectId 和日期為字串
         for portfolio in portfolios:
             portfolio['_id'] = str(portfolio['_id'])
-            if 'created_at' in portfolio:
+            if 'created_at' in portfolio and portfolio['created_at']:
                 portfolio['created_at'] = portfolio['created_at'].isoformat()
                 
         return jsonify(portfolios), 200
@@ -622,59 +631,84 @@ def unsubscribe_subscriber(subscriber_id):
 def get_recent_activities():
     """獲取最近活動"""
     if not session.get('admin_logged_in'):
-        return jsonify({'error': '未授權訪問'}), 401
+        return jsonify({'error': '未授權訪問'}), 403
         
     try:
-        # 獲取最近5個聯絡訊息
-        recent_contacts = list(mongo.db.contacts.find().sort('created_at', -1).limit(5))
-        for contact in recent_contacts:
-            contact['_id'] = str(contact['_id'])
-            contact['time'] = contact['created_at'].strftime('%Y-%m-%d %H:%M')
-            contact['message'] = f"收到 {contact['name']} 的訊息"
-            contact['icon'] = 'fa-comment text-primary'
-            contact['type'] = 'contact'
+        # 創建一個活動列表
+        activities = []
         
-        # 獲取最近5個訂閱
-        recent_subscribers = list(mongo.db.newsletter_subscribers.find().sort('subscribed_at', -1).limit(5))
-        for subscriber in recent_subscribers:
-            subscriber['_id'] = str(subscriber['_id'])
-            subscriber['time'] = subscriber['subscribed_at'].strftime('%Y-%m-%d %H:%M')
-            subscriber['message'] = f"新訂閱者: {subscriber['email']}"
-            subscriber['icon'] = 'fa-envelope text-success'
-            subscriber['type'] = 'subscriber'
+        # 獲取最近的作品
+        portfolios = list(mongo.db.portfolio.find().sort([('created_at', -1)]).limit(3))
+        for portfolio in portfolios:
+            activities.append({
+                'icon': 'fa-folder-open',
+                'message': f"新增作品: {portfolio.get('title', '未命名')}",
+                'time': portfolio.get('created_at').strftime('%Y-%m-%d') if portfolio.get('created_at') else '未知'
+            })
         
-        # 合併並根據時間排序
-        activities = recent_contacts + recent_subscribers
-        activities.sort(key=lambda x: x.get('created_at', x.get('subscribed_at')), reverse=True)
+        # 獲取最近的訂閱者
+        subscribers = list(mongo.db.newsletter_subscribers.find().sort([('subscribed_at', -1)]).limit(3))
+        for subscriber in subscribers:
+            activities.append({
+                'icon': 'fa-envelope',
+                'message': f"新訂閱者: {subscriber.get('email', '未知')}",
+                'time': subscriber.get('subscribed_at').strftime('%Y-%m-%d') if subscriber.get('subscribed_at') else '未知'
+            })
         
-        # 格式化時間為人類可讀形式
-        for activity in activities:
-            if 'created_at' in activity:
-                timestamp = activity['created_at']
-            else:
-                timestamp = activity['subscribed_at']
-                
-            now = datetime.now(pytz.utc)
-            delta = now - timestamp
-            
-            if delta.days == 0:
-                hours = delta.seconds // 3600
-                if hours == 0:
-                    minutes = delta.seconds // 60
-                    activity['time'] = f"{minutes} 分鐘前"
-                else:
-                    activity['time'] = f"{hours} 小時前"
-            else:
-                if delta.days == 1:
-                    activity['time'] = "1 天前"
-                else:
-                    activity['time'] = f"{delta.days} 天前"
+        # 獲取最近的聯絡訊息
+        contacts = list(mongo.db.contacts.find().sort([('created_at', -1)]).limit(3))
+        for contact in contacts:
+            activities.append({
+                'icon': 'fa-comment',
+                'message': f"收到訊息: 來自 {contact.get('name', '未知')}",
+                'time': contact.get('created_at').strftime('%Y-%m-%d') if contact.get('created_at') else '未知'
+            })
         
-        # 僅返回前10個活動
-        return jsonify(activities[:10])
+        # 按時間排序
+        activities = sorted(activities, key=lambda x: x.get('time', ''), reverse=True)
+        
+        return jsonify(activities[:5])  # 只返回最近5條
+        
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': '獲取活動失敗'}), 500
+        print(f"獲取最近活動失敗: {str(e)}")
+        return jsonify([]), 500
+
+@app.route('/api/diagnostics/db')
+def db_diagnostics():
+    """診斷端點，檢查數據庫連接"""
+    try:
+        # 基本連接資訊
+        result = {
+            'status': 'connected',
+            'db_name': mongo.db.name,
+            'collections': [],
+            'portfolio_count': 0
+        }
+        
+        # 獲取集合列表
+        try:
+            collections = mongo.db.list_collection_names()
+            result['collections'] = collections
+            
+            # 如果有portfolio集合，查詢文檔數量
+            if 'portfolio' in collections:
+                result['portfolio_count'] = mongo.db.portfolio.count_documents({})
+                
+                # 獲取一個樣本文檔
+                sample = mongo.db.portfolio.find_one()
+                if sample:
+                    result['sample_id'] = str(sample['_id'])
+                    result['sample_title'] = sample.get('title', '無標題')
+        except Exception as e:
+            result['collections_error'] = str(e)
+            
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'uri_prefix': mongodb_uri[:15] + '...' if mongodb_uri else 'None'
+        })
 
 
 
