@@ -335,9 +335,14 @@
           <p>分享學習心得、技術見解和有價值的資源，建立一個持續學習和成長的社群。</p>
           
           <div class="mt-4">
-            <form class="flex gap-2">
-              <input type="email" placeholder="您的電子郵件" class="px-3 py-2 border rounded-lg flex-grow">
-              <button type="submit" class="btn px-4 py-2 rounded-lg">訂閱</button>
+            <form id="newsletter-form" class="flex flex-col gap-2">
+              <div class="flex gap-2">
+                <input type="email" id="newsletter-email" placeholder="您的電子郵件" 
+                       class="px-3 py-2 border rounded-lg flex-grow" required>
+                <button type="submit" id="subscribe-btn" 
+                        class="btn px-4 py-2 rounded-lg">訂閱</button>
+              </div>
+              <div id="subscription-status" class="mt-2 text-sm hidden"></div>
             </form>
           </div>
         </div>
@@ -354,16 +359,17 @@
       <h2 class="text-3xl font-bold mb-8">工作之外的我</h2>
       
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <!-- 健身 -->
-        <div class="hobby-card rounded-lg overflow-hidden">
-          <div class="h-40 overflow-hidden">
-            <img src="https://img4.uploadhouse.com/fileuploads/31936/319368643e2679238827493d554c98402d8ce2a6.jpg" alt="健身" class="w-full h-full object-cover">
+          <!-- 跑步 -->
+          <div class="hobby-card rounded-lg overflow-hidden">
+            <div class="h-40 overflow-hidden">
+              <img src="https://img6.uploadhouse.com/fileuploads/31936/31936866e532037a3fc020e252756014fe9fbebf.jpg" alt="跑步" class="w-full h-full object-cover">
+            </div>
+            <div class="p-3 text-center bg-amber-50">
+              <h3 class="font-bold">跑步</h3>
+            </div>
           </div>
-          <div class="p-3 text-center bg-amber-50">
-            <h3 class="font-bold">健身</h3>
-          </div>
-        </div>
-        
+
+
         <!-- 咖啡 -->
         <div class="hobby-card rounded-lg overflow-hidden">
           <div class="h-40 overflow-hidden">
@@ -373,16 +379,19 @@
             <h3 class="font-bold">咖啡</h3>
           </div>
         </div>
-        
-        <!-- 跑步 -->
+          
+        <!-- 健身 -->
         <div class="hobby-card rounded-lg overflow-hidden">
           <div class="h-40 overflow-hidden">
-            <img src="https://img6.uploadhouse.com/fileuploads/31936/31936866e532037a3fc020e252756014fe9fbebf.jpg" alt="跑步" class="w-full h-full object-cover">
+            <img src="https://img8.uploadhouse.com/fileuploads/31937/31937298023d322cb396e779e18f49439d96f45e.png" alt="健身" class="w-full h-full object-cover" >
           </div>
           <div class="p-3 text-center bg-amber-50">
-            <h3 class="font-bold">跑步</h3>
+            <h3 class="font-bold">健身</h3>
           </div>
         </div>
+        
+
+
         
         <!-- 彈吉他 -->
         <div class="hobby-card rounded-lg overflow-hidden">
@@ -540,6 +549,66 @@
     // 載入輪播項目
     loadCarouselItems();
   });
+
+  // 電子報訂閱功能
+  document.addEventListener('DOMContentLoaded', function() {
+    const newsletterForm = document.getElementById('newsletter-form');
+    const emailInput = document.getElementById('newsletter-email');
+    const subscribeBtn = document.getElementById('subscribe-btn');
+    const statusElement = document.getElementById('subscription-status');
+    
+    if (newsletterForm) {
+      newsletterForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // 顯示載入狀態
+        subscribeBtn.disabled = true;
+        subscribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 處理中...';
+        statusElement.classList.add('hidden');
+        
+        const email = emailInput.value.trim();
+        
+        try {
+          // 發送 API 請求
+          const response = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+          });
+          
+          const data = await response.json();
+          
+          // 顯示結果
+          statusElement.classList.remove('hidden');
+          if (response.ok) {
+            // 成功
+            statusElement.textContent = data.message;
+            statusElement.className = 'mt-2 text-sm text-green-600';
+            // 清空輸入
+            emailInput.value = '';
+          } else {
+            // 錯誤
+            statusElement.textContent = data.message;
+            statusElement.className = 'mt-2 text-sm text-red-600';
+          }
+        } catch (error) {
+          // 網路錯誤或其他異常
+          console.error('訂閱請求失敗:', error);
+          statusElement.classList.remove('hidden');
+          statusElement.textContent = '連接伺服器時出錯，請稍後再試';
+          statusElement.className = 'mt-2 text-sm text-red-600';
+        } finally {
+          // 恢復按鈕狀態
+          subscribeBtn.disabled = false;
+          subscribeBtn.innerHTML = '訂閱';
+        }
+      });
+    }
+  });
+
+
   </script>
 </body>
 </html>
