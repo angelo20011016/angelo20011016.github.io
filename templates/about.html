@@ -3,25 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>關於我</title>
+  <title>關於我 | Angelo</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     body { background-color: #FAFAFA; color: #3E2723; font-family: 'Lora', serif; }
     .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
-    .hero { background: url('https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg') center/cover no-repeat; }
+    .hero { background: url('https://images.unsplash.com/photo-1555066931-bf19f8fd1085') center/cover no-repeat; }
     .card { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; }
     .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
     .btn:hover { background: #3E2723; color: white; }
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background: #f2f2f2;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      .progress {
+        height: 100%;
+        background: linear-gradient(90deg, #8D6E63 0%, #5D4037 100%);
+        border-radius: 4px;
+      }
+      .hobby-card {
+        overflow: hidden;
+        transition: transform 0.3s ease;
+      }
+      .hobby-card:hover {
+        transform: translateY(-5px);
+      }
+      .skill-cloud {
+        position: relative;
+        padding: 20px 0;
+      }
+      .skill-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+      .skill-category {
+        position: relative;
+      }
+      .main-skill {
+        background: #f7f0e6;
+        color: #5D4037;
+        padding: 12px 20px;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+      }
+      .main-skill:hover {
+        background: #8D6E63;
+        color: white;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      }
+      .sub-skills {
+        position: absolute;
+        display: none;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        background: white;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        width: 250px;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 10px;
+        z-index: 10;
+      }
+      .sub-skills:before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 0 10px 10px 10px;
+        border-style: solid;
+        border-color: transparent transparent white transparent;
+      }
+      .sub-skill {
+        background: #f9f5f2;
+        color: #5D4037;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 14px;
+      }
+      .sub-skill small {
+        color: #8D6E63;
+        font-weight: bold;
+      }
+      .carousel-item {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.8s ease;
+        display: flex;
+        flex-direction: column;
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 30px;
+      }
+
+      .carousel-item.active {
+        opacity: 1;
+      }
+
+      .carousel-item:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%);
+        z-index: 0;
+      }
+
+      .carousel-content {
+        position: relative;
+        z-index: 1;
+        margin-top: auto;
+      }
+
+      .carousel-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .carousel-dot.active {
+        background-color: white;
+        transform: scale(1.2);
+      }
   </style>
 </head>
 <body>
   <!-- 導航欄 -->
   <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
     <div class="container mx-auto flex items-center justify-between">
-      <a href="about.html" class="text-2xl font-bold">米歇爾Angelo Lab</a>
+      <a href="about.html" class="text-2xl font-bold">Angeloange</a>
       <nav class="hidden lg:flex space-x-6">
         <a href="about.html" class="hover:text-gray-500">關於我</a>
-        <a href="porfolio.html" class="hover:text-gray-500">作品集</a>
+        <a href="portfolio.html" class="hover:text-gray-500">作品集</a>
         <a href="blog.html" class="hover:text-gray-500">部落格</a>
         <a href="contactme.html" class="hover:text-gray-500">聯絡我</a>
       </nav>
@@ -33,32 +172,443 @@
     <div class="absolute inset-0 bg-black bg-opacity-40"></div>
     <div class="relative z-10 text-center text-white">
       <h1 class="text-5xl font-bold">關於我</h1>
-      <p class="mt-4 text-lg">了解我的故事與專業背景</p>
+      <p class="mt-4 text-lg">探索我的技術旅程與創作熱情</p>
     </div>
   </section>
 
-  <!-- 內容區塊 -->
+  <!-- 個人介紹 -->
   <section class="container mx-auto py-16 px-6 max-w-4xl">
     <div class="card p-8">
-      <h2 class="text-3xl font-bold">我的故事</h2>
-      <p class="mt-4 text-gray-700">我是一名專業創作者，熱愛設計、技術與創意。我希望透過這個網站分享我的經驗與作品，並與志同道合的人交流。</p>
-      <h2 class="text-3xl font-bold mt-8">我的專業</h2>
-      <p class="mt-4 text-gray-700">擁有豐富的 UI/UX 設計、前端開發與內容創作經驗，專注於打造具有美感與實用性的數位體驗。</p>
+      <!-- 個人資訊區域 -->
+      <div class="flex flex-col md:flex-row gap-8 items-center md:items-start">
+        <!-- 個人照片 -->
+        <div class="w-48 h-48 rounded-full overflow-hidden flex-shrink-0 border-4 border-amber-800">
+          <img src="https://img8.uploadhouse.com/fileuploads/31936/31936778eb4b70130f3289122781a71f94414143.jpg" alt="Angelo照片" class="w-full h-full object-cover">
+        </div>
+        
+        <!-- 個人簡介 -->
+        <div>
+          <h2 class="text-3xl font-bold">Hi, I'm Angelo</h2>
+          <h3 class="text-xl text-amber-800 mt-2">我希望把自己的人生打造成很多人都可以受益的正和遊戲</h3>
+          <h3 class="text-xl text-amber-800 mt-2">Then said "Happy we can!"</h3>
+          <p class="mt-6 text-gray-700">
+            大學時期的我，在課餘時間擔任過吉他社團老師、咖啡師、以及軟體新創業務。除了喜歡把雜亂的知識收斂成系統後與他人分享，更在實習過程中很好的收穫了簡報/提案/思考能力。而拜於學校重視數據驅動的趨勢，我也培養了不錯的數理能力
+            ，從中發現了用程式解決現實問題的樂趣，更點燃了我對技術的熱情。除了本科的數理統計/統計分析，更跨系修習了許多程式相關的課程，以展現學習積極/以及學習能力，詳情可以參考<a href="https://drive.google.com/file/d/1rKGg4z_ZxPkvfL82YNfv-tEenXQ0Zn7b/view?usp=share_link" style="color:blue;" target="_blank">成績單超連結</a>，也在畢業前與畢業後分別並參與了ccClub/職訓局這兩個非常扎實的coding bootcamp。
+          </p>
+          <p class="mt-4 text-gray-700">
+            積極求職的現在，深知轉職軟體工程是一條艱辛，且需要持續學習的路程，我仍然積極探索各種技術領域，持續打造能夠真正解決問題的作品集。
+          </p>
+          
+          <div class="flex gap-4 mt-6">
+            <a href="portfolio.html" class="btn px-5 py-2 rounded-lg flex items-center">
+              <i class="fas fa-briefcase mr-2"></i> 查看作品集
+            </a>
+            <a href="contactme.html" class="btn px-5 py-2 rounded-lg flex items-center">
+              <i class="fas fa-envelope mr-2"></i> 與我聯繫
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技能樹區域 - 已移至個人介紹卡片內 -->
+      <div class="mt-12">
+        <h2 class="text-3xl font-bold mb-6" style="text-align: center;">我的技能樹</h2>
+        
+        <div class="skill-cloud">
+          <div class="skill-categories">
+            <!-- 前端開發 -->
+            <div class="skill-category" onmouseenter="showSkills('frontend')" onmouseleave="hideSkills()">
+              <div class="main-skill">
+                <i class="fas fa-code text-amber-800 mr-2"></i>
+                前端開發
+              </div>
+              <div class="sub-skills" id="frontend">
+                <span class="sub-skill">HTML/CSS </span>
+                <span class="sub-skill">JavaScript </span>
+                <span class="sub-skill">TailwindCSS </span>
+                <span class="sub-skill">響應式設計</span>
+              </div>
+            </div>
+            
+            <!-- 後端開發 -->
+            <div class="skill-category" onmouseenter="showSkills('backend')" onmouseleave="hideSkills()">
+              <div class="main-skill">
+                <i class="fas fa-server text-amber-800 mr-2"></i>
+                後端開發
+              </div>
+              <div class="sub-skills" id="backend">
+                <span class="sub-skill">Python </span>
+                <span class="sub-skill">Flask </span>
+                <span class="sub-skill">MongoDB/MySQL </span>
+                <span class="sub-skill">RESTful API</span>
+                <span class="sub-skill">EventLet</span>
+              </div>
+            </div>
+            
+            <!-- 業務能力 -->
+            <div class="skill-category" onmouseenter="showSkills('business')" onmouseleave="hideSkills()">
+              <div class="main-skill">
+                <i class="fas fa-handshake text-amber-800 mr-2"></i>
+                業務能力
+              </div>
+              <div class="sub-skills" id="business">
+                <span class="sub-skill">提案技巧</span>
+                <span class="sub-skill">簡報製作</span>
+                <span class="sub-skill">商業/競品分析</span>
+                <span class="sub-skill">陌生開發</span>
+                <span class="sub-skill">客戶維護</span>
+              </div>
+            </div>
+            
+            <!-- 數據分析 -->
+            <div class="skill-category" onmouseenter="showSkills('data')" onmouseleave="hideSkills()">
+              <div class="main-skill">
+                <i class="fas fa-chart-line text-amber-800 mr-2"></i>
+                數據分析
+              </div>
+              <div class="sub-skills" id="data">
+                <span class="sub-skill">統計分析</span>
+                <span class="sub-skill">資料視覺化</span>
+                <span class="sub-skill">機器學習</span>
+                <span class="sub-skill">數據解讀</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
   
+  <!-- 作品集預覽 -->
+  <section class="container mx-auto py-8 px-6 max-w-4xl">
+    <div class="card p-8">
+      <h2 class="text-3xl font-bold mb-8">精選作品</h2>
+      
+      <!-- 輪播容器 -->
+      <div class="relative overflow-hidden rounded-lg" style="height: 320px;">
+        <!-- 輪播內容區域 -->
+        <div id="carousel-container" class="w-full h-full">
+          <!-- 輪播項目由JavaScript動態生成 -->
+          <div class="text-center py-16">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-800 mx-auto"></div>
+            <p class="mt-4 text-gray-600">載入中...</p>
+          </div>
+        </div>
+        
+        <!-- 輪播控制按鈕 -->
+        <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2" id="carousel-dots">
+          <!-- 輪播指示點由JavaScript動態生成 -->
+        </div>
+      </div>
+      
+      <!-- 查看全部按鈕 -->
+      <div class="text-center mt-6">
+        <a href="portfolio.html" target="_blank" class="btn px-6 py-2 rounded-lg inline-flex items-center">
+          <span>查看全部作品</span>
+          <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 願景與目標 -->
+  <section class="container mx-auto py-8 px-6 max-w-4xl mb-12">
+    <div class="card p-8">
+      <h2 class="text-3xl font-bold mb-6">我的願景</h2>
+      
+      <p class="text-gray-700 mb-4">
+        我希望通過這個網站分享我的學習旅程，並為其他有相似興趣的人提供實用的資源和工具。
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div class="bg-amber-50 p-6 rounded-lg">
+          <h3 class="text-xl font-bold mb-3 flex items-center">
+            <i class="fas fa-rocket mr-2 text-amber-800"></i> Side Project 平台
+          </h3>
+          <p>打造一個開放的平台，提供各種實用的小工具和解決方案，幫助有需要的人解決實際問題。</p>
+        </div>
+        
+        <div class="bg-amber-50 p-6 rounded-lg">
+          <h3 class="text-xl font-bold mb-3 flex items-center">
+            <i class="fas fa-newspaper mr-2 text-amber-800"></i> 電子報
+          </h3>
+          <p>分享學習心得、技術見解和有價值的資源，建立一個持續學習和成長的社群。</p>
+          
+          <div class="mt-4">
+            <form id="newsletter-form" class="flex flex-col gap-2">
+              <div class="flex gap-2">
+                <input type="email" id="newsletter-email" placeholder="您的電子郵件" 
+                       class="px-3 py-2 border rounded-lg flex-grow" required>
+                <button type="submit" id="subscribe-btn" 
+                        class="btn px-4 py-2 rounded-lg">訂閱</button>
+              </div>
+              <div id="subscription-status" class="mt-2 text-sm hidden"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+
+  <!-- 興趣愛好 -->
+  <section class="container mx-auto py-8 px-6 max-w-4xl">
+    <div class="card p-8">
+      <h2 class="text-3xl font-bold mb-8">工作之外的我</h2>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- 跑步 -->
+          <div class="hobby-card rounded-lg overflow-hidden">
+            <div class="h-40 overflow-hidden">
+              <img src="https://img6.uploadhouse.com/fileuploads/31936/31936866e532037a3fc020e252756014fe9fbebf.jpg" alt="跑步" class="w-full h-full object-cover">
+            </div>
+            <div class="p-3 text-center bg-amber-50">
+              <h3 class="font-bold">跑步</h3>
+            </div>
+          </div>
+
+
+        <!-- 咖啡 -->
+        <div class="hobby-card rounded-lg overflow-hidden">
+          <div class="h-40 overflow-hidden">
+            <img src="https://img2.uploadhouse.com/fileuploads/31936/3193686247bb0dd7f71643ea2b64c918032da91b.jpg" alt="咖啡" class="w-full h-full object-cover">
+          </div>
+          <div class="p-3 text-center bg-amber-50">
+            <h3 class="font-bold">咖啡</h3>
+          </div>
+        </div>
+          
+        <!-- 健身 -->
+        <div class="hobby-card rounded-lg overflow-hidden">
+          <div class="h-40 overflow-hidden">
+            <img src="https://img8.uploadhouse.com/fileuploads/31937/31937298023d322cb396e779e18f49439d96f45e.png" alt="健身" class="w-full h-full object-cover" >
+          </div>
+          <div class="p-3 text-center bg-amber-50">
+            <h3 class="font-bold">健身</h3>
+          </div>
+        </div>
+        
+
+
+        
+        <!-- 彈吉他 -->
+        <div class="hobby-card rounded-lg overflow-hidden">
+          <div class="h-40 overflow-hidden">
+            <img src="https://img3.uploadhouse.com/fileuploads/31936/31936863619a5b492ca7b371d3cec2170e2a415e.jpg" alt="彈吉他" class="w-full h-full object-cover">
+          </div>
+          <div class="p-3 text-center bg-amber-50">
+            <h3 class="font-bold">音樂</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
   <!-- 頁腳 -->
   <footer class="bg-gray-100 text-gray-800 py-6 mt-12">
     <div class="container mx-auto flex flex-col items-center space-y-4">
       <div class="flex space-x-6">
-        <a href="#" class="hover:text-gray-500">IG</a>
-        <a href="#" class="hover:text-gray-500">小紅書</a>
-        <a href="#" class="hover:text-gray-500">GitHub</a>
-        <a href="#" class="hover:text-gray-500">Email</a>
-        <a href="#" class="hover:text-gray-500">YouTube</a>
+        <a href="https://www.instagram.com/angelo__1016/" target="_blanker" class="hover:text-gray-500">IG</a>
+        
+        <a href="https://github.com/angeloange?tab=repositories" target="_blanker" class="hover:text-gray-500">GitHub</a>
+        <a href="https://www.youtube.com/@Happywecan" target="_blanker"  class="hover:text-gray-500">YouTube</a>
       </div>
-      <p class="text-sm">&copy; 2025 MichelAngelo Lab. All rights reserved.</p>
+      <p class="text-sm">&copy; 2025 MichelAngelo. All rights reserved.</p>
     </div>
   </footer>
+  <script>
+    function showSkills(skillId) {
+      // 先隱藏所有的子技能列表
+      document.querySelectorAll('.sub-skills').forEach(function(el) {
+        el.style.display = 'none';
+      });
+      
+      // 顯示被懸停的技能的子技能列表
+      document.getElementById(skillId).style.display = 'flex';
+    }
+    
+    function hideSkills() {
+      // 隱藏所有子技能列表
+      document.querySelectorAll('.sub-skills').forEach(function(el) {
+        el.style.display = 'none';
+      });
+    }
+    
+    // 點擊空白處隱藏所有子技能列表
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.skill-category')) {
+        hideSkills();
+      }
+    });
+    
+    // 防止子技能點擊事件冒泡
+    document.querySelectorAll('.sub-skills').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+    // 輪播功能
+  async function loadCarouselItems() {
+    try {
+      // 從API獲取作品資料
+      const response = await fetch('/api/portfolio');
+      const portfolios = await response.json();
+      
+      // 只取前3個作品
+      const featuredItems = portfolios.slice(0, 3);
+      
+      if (featuredItems.length === 0) {
+        document.getElementById('carousel-container').innerHTML = 
+          '<p class="text-center">暫無作品</p>';
+        return;
+      }
+      
+      // 生成輪播內容
+      const carouselContainer = document.getElementById('carousel-container');
+      const dotsContainer = document.getElementById('carousel-dots');
+      
+      carouselContainer.innerHTML = '';
+      dotsContainer.innerHTML = '';
+      
+      featuredItems.forEach((item, index) => {
+        // 創建輪播項
+        const carouselItem = document.createElement('div');
+        carouselItem.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+        carouselItem.style.backgroundImage = `url(${item.image_url || 'https://via.placeholder.com/800x400?text=No+Image'})`;
+        
+        carouselItem.innerHTML = `
+          <div class="carousel-content">
+            <h3 class="text-2xl font-bold">${item.title}</h3>
+            <p class="mt-2 line-clamp-2">${item.description}</p>
+            <a href="/portfolio/${item._id}" target="_blank" class="mt-4 bg-white text-amber-800 hover:bg-amber-800 hover:text-white px-4 py-2 rounded-lg inline-block transition duration-300">查看更多</a>
+          </div>
+        `;
+        
+        carouselContainer.appendChild(carouselItem);
+        
+        // 創建輪播指示點
+        const dot = document.createElement('div');
+        dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+        dot.addEventListener('click', () => showSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+      
+      // 設置自動輪播
+      startCarousel(featuredItems.length);
+      
+    } catch (error) {
+      console.error('載入作品失敗', error);
+      document.getElementById('carousel-container').innerHTML = 
+        '<p class="text-center text-red-500">載入作品失敗，請稍後再試</p>';
+    }
+  }
+
+  let carouselInterval;
+  let currentSlide = 0;
+
+  function startCarousel(totalSlides) {
+    // 自動輪播，每5秒切換一次
+    carouselInterval = setInterval(() => {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      showSlide(currentSlide);
+    }, 5000);
+  }
+
+  function showSlide(index) {
+    // 切換輪播項
+    const items = document.querySelectorAll('.carousel-item');
+    const dots = document.querySelectorAll('.carousel-dot');
+    
+    items.forEach((item, i) => {
+      item.classList.toggle('active', i === index);
+    });
+    
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+    
+    currentSlide = index;
+    
+    // 重置自動輪播計時器
+    clearInterval(carouselInterval);
+    startCarousel(items.length);
+  }
+
+  // 頁面載入後執行
+  document.addEventListener('DOMContentLoaded', function() {
+    // 載入現有的技能樹功能
+    document.querySelectorAll('.sub-skills').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+    
+    // 載入輪播項目
+    loadCarouselItems();
+  });
+
+  // 電子報訂閱功能
+  document.addEventListener('DOMContentLoaded', function() {
+    const newsletterForm = document.getElementById('newsletter-form');
+    const emailInput = document.getElementById('newsletter-email');
+    const subscribeBtn = document.getElementById('subscribe-btn');
+    const statusElement = document.getElementById('subscription-status');
+    
+    if (newsletterForm) {
+      newsletterForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // 顯示載入狀態
+        subscribeBtn.disabled = true;
+        subscribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 處理中...';
+        statusElement.classList.add('hidden');
+        
+        const email = emailInput.value.trim();
+        
+        try {
+          // 發送 API 請求
+          const response = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+          });
+          
+          const data = await response.json();
+          
+          // 顯示結果
+          statusElement.classList.remove('hidden');
+          if (response.ok) {
+            // 成功
+            statusElement.textContent = data.message;
+            statusElement.className = 'mt-2 text-sm text-green-600';
+            // 清空輸入
+            emailInput.value = '';
+          } else {
+            // 錯誤
+            statusElement.textContent = data.message;
+            statusElement.className = 'mt-2 text-sm text-red-600';
+          }
+        } catch (error) {
+          // 網路錯誤或其他異常
+          console.error('訂閱請求失敗:', error);
+          statusElement.classList.remove('hidden');
+          statusElement.textContent = '連接伺服器時出錯，請稍後再試';
+          statusElement.className = 'mt-2 text-sm text-red-600';
+        } finally {
+          // 恢復按鈕狀態
+          subscribeBtn.disabled = false;
+          subscribeBtn.innerHTML = '訂閱';
+        }
+      });
+    }
+  });
+
+
+  </script>
 </body>
 </html>

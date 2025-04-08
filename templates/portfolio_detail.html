@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ portfolio.title }} | 作品集</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #FAFAFA; color: #3E2723; font-family: 'Lora', serif; }
+    .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    .content-container img:first-of-type {
+      max-height: 400px;
+      width: 100%;
+      object-fit: contain;
+    }    
+    .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
+    .btn:hover { background: #3E2723; color: white; }
+  </style>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
+</head>
+<body>
+  <!-- 導航欄 -->
+  <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
+    <div class="container mx-auto flex items-center justify-between">
+      <a href="/about.html" class="text-2xl font-bold">Angeloange</a>
+      <nav class="hidden lg:flex space-x-6">
+        <a href="/about.html" class="hover:text-gray-500">關於我</a>
+        <a href="/portfolio.html" class="hover:text-gray-500">作品集</a>
+        <a href="/blog.html" class="hover:text-gray-500">部落格</a>
+        <a href="/contactme.html" class="hover:text-gray-500">聯絡我</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- 作品詳情 -->
+  <section class="container mx-auto py-24 px-6 max-w-4xl">
+    <div class="content-container p-8">
+      <a href="/portfolio.html" class="text-gray-600 hover:text-gray-900 mb-4 inline-block">
+        &larr; 返回作品列表
+      </a>
+      
+      <h1 class="text-4xl font-bold mt-4">{{ portfolio.title }}</h1>
+      
+      {% if portfolio.tags %}
+      <div class="mt-2 flex flex-wrap gap-2">
+        {% for tag in portfolio.tags %}
+        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      
+      {% if portfolio.image_url %}
+      <img src="{{ portfolio.image_url }}" alt="{{ portfolio.title }}" class="w-full rounded-lg mt-6">
+      {% endif %}
+      
+      <!-- 富文本內容區域 -->
+      <div class="mt-8 prose prose-slate max-w-none">
+        <p>{{ portfolio.description }}</p>
+        
+        {% if portfolio.content %}
+        <div class="mt-8 rich-content ql-editor">
+            {{ portfolio.content|safe }}
+        </div>
+        {% endif %}
+      </div>
+      <div class="mt-8 flex gap-4">
+        {% if portfolio.github_url %}
+        <a href="{{ portfolio.github_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">Github連結</a>
+        {% endif %}
+        
+        {% if portfolio.demo_url %}
+        <a href="{{ portfolio.demo_url }}" target="_blank" class="btn px-4 py-2 rounded-lg">Demo影片</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  
+  <!-- 頁腳 -->
+  <footer class="bg-gray-100 text-gray-800 py-6 mt-12">
+    <div class="container mx-auto flex flex-col items-center space-y-4">
+      <div class="flex space-x-6">
+        <a href="https://www.instagram.com/angelo__1016/" target="_blanker" class="hover:text-gray-500">IG</a>
+        
+        <a href="https://github.com/angeloange?tab=repositories" target="_blanker" class="hover:text-gray-500">GitHub</a>
+        <a href="https://www.youtube.com/@Happywecan" target="_blanker"  class="hover:text-gray-500">YouTube</a>
+      </div>
+      <p class="text-sm">&copy; 2025 MichelAngelo Lab. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
