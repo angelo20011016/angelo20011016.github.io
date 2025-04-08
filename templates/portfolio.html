@@ -19,6 +19,13 @@
       object-fit: cover;   /* 裁切並保持覆蓋 */
       object-position: center; /* 居中裁切 */
     }
+    .card .bg-amber-50 {
+    transition: all 0.2s ease;
+    }
+    .card .bg-amber-50:hover {
+      background-color: #3E2723;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -82,6 +89,16 @@
             <div class="card p-6">
               <img src="${portfolio.image_url || 'https://via.placeholder.com/300'}" alt="${portfolio.title}" class="w-full rounded-lg">
               <h3 class="text-2xl font-semibold mt-4">${portfolio.title}</h3>
+              
+              <!-- 添加技術標籤顯示 -->
+              ${portfolio.tags && portfolio.tags.length > 0 ? 
+                `<div class="mt-2 flex flex-wrap gap-2">
+                    ${portfolio.tags.map(tag => 
+                      `<span class="bg-amber-50 text-amber-800 text-xs px-2 py-1 rounded-full">${tag}</span>`
+                    ).join('')}
+                </div>` 
+                : ''}
+              
               <p class="mt-2 text-gray-700">${portfolio.description}</p>
               <a href="/portfolio/${portfolio._id}" class="btn mt-4 px-4 py-2 inline-block rounded-lg">查看作品</a>
             </div>
