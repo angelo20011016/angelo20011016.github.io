@@ -18,6 +18,12 @@ app = Flask(__name__)
 mongodb_uri = os.getenv('MONGODB_URI') or os.getenv('MONGODB_URL_PROD')
 if not mongodb_uri:
     mongodb_uri = os.getenv('MONGODB_URL_DEV', 'mongodb://localhost:27017/my_website')
+
+# 確保 URI 包含數據庫名稱
+if mongodb_uri and '/' not in mongodb_uri.split('://')[-1]:
+    mongodb_uri += '/my_website'  # 添加默認數據庫名稱
+
+
 app.config["MONGO_URI"] = mongodb_uri
 mongo = PyMongo(app)
 app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
