@@ -405,21 +405,38 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log("頁面已完全載入");
       
-      // 為編輯模態框也初始化富文本編輯器
-      tinymce.init({
-        selector: '#detail_content',
-        height: 300,
-        plugins: 'advlist autolink lists link image charmap print preview anchor ' +
-                'searchreplace visualblocks code fullscreen ' +
-                'insertdatetime media table paste code help wordcount',
-        toolbar: 'undo redo | formatselect | ' +
-                'bold italic backcolor | alignleft aligncenter ' +
-                'alignright alignjustify | bullist numlist outdent indent | ' +
-                'removeformat | help',
-        language: 'zh_TW',
-        menubar: 'file edit view insert format tools table help',
-        content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; }'
-      });
+        // 初始化新增表單的富文本編輯器
+        tinymce.init({
+            selector: '#detail_content',
+            height: 300,
+            plugins: 'advlist autolink lists link image charmap print preview anchor ' +
+                    'searchreplace visualblocks code fullscreen ' +
+                    'insertdatetime media table paste code help wordcount',
+            toolbar: 'undo redo | formatselect | ' +
+                    'bold italic backcolor | alignleft aligncenter ' +
+                    'alignright alignjustify | bullist numlist outdent indent | ' +
+                    'removeformat | help',
+            language: 'zh_TW',
+            menubar: 'file edit view insert format tools table help',
+            content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; }'
+        });
+        
+        // 初始化編輯模態框的富文本編輯器
+        tinymce.init({
+            selector: '#edit-detail_content',
+            height: 300,
+            plugins: 'advlist autolink lists link image charmap print preview anchor ' +
+                    'searchreplace visualblocks code fullscreen ' +
+                    'insertdatetime media table paste code help wordcount',
+            toolbar: 'undo redo | formatselect | ' +
+                    'bold italic backcolor | alignleft aligncenter ' +
+                    'alignright alignjustify | bullist numlist outdent indent | ' +
+                    'removeformat | help',
+            language: 'zh_TW',
+            menubar: 'file edit view insert format tools table help',
+            content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; }'
+        });
+  
       
       // 載入作品集資料
       loadPortfolioItems();
@@ -909,16 +926,21 @@
             
             // 填充表單
             document.getElementById('edit-portfolio-id').value = portfolio._id;
-            document.getElementById('edit-title').value = portfolio.title;
+            document.getElementById('edit-title').value = portfolio.title || '';
             
             // 簡短描述使用普通輸入框
             document.getElementById('edit-description').value = portfolio.description || '';
             
-            // 詳細內容使用富文本編輯器
+            // 詳細內容 - 兼容舊版的 content 和新版的 detail_content
             try {
                 const editor = tinymce.get('edit-detail_content');
                 if (editor) {
-                editor.setContent(portfolio.detail_content || '');
+                // 優先使用 detail_content，如果不存在則嘗試使用 content
+                const content = portfolio.detail_content || portfolio.content || '';
+                editor.setContent(content);
+                console.log("富文本內容已設置:", content.substring(0, 50) + "...");
+                } else {
+                console.error("找不到富文本編輯器實例");
                 }
             } catch(err) {
                 console.error("設置富文本內容錯誤:", err);
@@ -944,7 +966,6 @@
             alert('無法獲取作品詳情，請稍後再試');
             });
         }
-    // 保存編輯後的作品
     // 修改 saveEditedPortfolio 函數
 
     function saveEditedPortfolio() {

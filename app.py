@@ -136,7 +136,6 @@ def get_portfolio():
 
 
 # 修改 create_portfolio 函數
-
 @app.route('/api/portfolio', methods=['POST'])
 def create_portfolio():
     try:
@@ -148,11 +147,15 @@ def create_portfolio():
             missing = [field for field in required_fields if field not in data]
             return jsonify({'success': False, 'message': f'缺少必要欄位: {", ".join(missing)}'}), 400
         
-        # 準備資料 - 添加詳細內容欄位
+        # 獲取詳細內容
+        detail_content = data.get('detail_content', '')
+        
+        # 準備資料 - 同時設置兩個欄位
         portfolio = {
             'title': data['title'],
-            'description': data.get('description', ''),  # 簡短描述
-            'detail_content': data.get('detail_content', ''),  # 新增：詳細內容，使用富文本
+            'description': data.get('description', ''),
+            'detail_content': detail_content,
+            'content': detail_content,  # 確保content欄位同步設置
             'image_url': data.get('image_url', ''),
             'github_url': data.get('github_url', data.get('project_url', '')),
             'demo_url': data.get('demo_url', ''),
@@ -173,7 +176,6 @@ def create_portfolio():
     except Exception as e:
         print(f"創建作品錯誤: {str(e)}")
         return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
-
 
 # 電子報訂閱 API 端點
 @app.route('/api/subscribe', methods=['POST'])
@@ -365,25 +367,30 @@ def portfolio_detail(portfolio_id):
 def get_single_portfolio(portfolio_id):
     try:
         from bson.objectid import ObjectId
-        # 查詢特定ID的作品
         portfolio = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
-        if portfolio:
-            # 轉換ID格式
-            portfolio['_id'] = str(portfolio['_id'])
-            # 轉換時間格式
-            if 'created_at' in portfolio and portfolio['created_at']:
-                portfolio['created_at'] = portfolio['created_at'].isoformat()
-            if 'updated_at' in portfolio and portfolio['updated_at']:
-                portfolio['updated_at'] = portfolio['updated_at'].isoformat()
-            # 返回作品數據
-            return jsonify(portfolio)
-        else:
+        
+        if not portfolio:
             return jsonify({'error': '找不到該作品'}), 404
+            
+        # 處理 ObjectId
+        portfolio['_id'] = str(portfolio['_id'])
+        
+        # 處理日期
+        if 'created_at' in portfolio and portfolio['created_at']:
+            portfolio['created_at'] = portfolio['created_at'].isoformat()
+        
+        # 為了兼容性，如果 detail_content 不存在但 content 存在，則添加 detail_content
+        if 'content' in portfolio and portfolio['content'] and 'detail_content' not in portfolio:
+            portfolio['detail_content'] = portfolio['content']
+            
+        return jsonify(portfolio), 200
     except Exception as e:
-        print(f"獲取作品詳情錯誤: {str(e)}")
+        print(f"獲取單個作品錯誤: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # 完成 update_portfolio 函數
+
+# 修改 update_portfolio 函數
 
 @app.route('/api/portfolio/<portfolio_id>', methods=['PUT'])
 def update_portfolio(portfolio_id):
@@ -402,6 +409,10 @@ def update_portfolio(portfolio_id):
         for field in allowed_fields:
             if field in data:
                 update_data[field] = data[field]
+        
+        # 為了兼容性，同時更新 content 欄位
+        if 'detail_content' in data:
+            update_data['content'] = data['detail_content']
                 
         # 添加更新時間
         update_data['updated_at'] = datetime.now()
@@ -416,6 +427,9 @@ def update_portfolio(portfolio_id):
     except Exception as e:
         print(f"更新作品錯誤: {str(e)}")
         return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
+
+
+
 # 作品集 API - 刪除作品
 @app.route('/api/portfolio/<portfolio_id>', methods=['DELETE'])
 def delete_portfolio(portfolio_id):
@@ -664,7 +678,6 @@ def get_recent_activities():
     except Exception as e:
         print(f"獲取最近活動失敗: {str(e)}")
         return jsonify([]), 500
-
 
 
 if __name__ == '__main__':
