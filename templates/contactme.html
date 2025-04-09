@@ -19,15 +19,33 @@
 </head>
 <body>
   <!-- 導航欄 -->
+  <!-- 替換導航欄部分 -->
   <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
     <div class="container mx-auto flex items-center justify-between">
       <a href="about.html" class="text-2xl font-bold">Angeloange</a>
+      
+      <!-- 桌面版導航 - 大屏幕顯示 -->
       <nav class="hidden lg:flex space-x-6">
         <a href="about.html" class="hover:text-gray-500">關於我</a>
         <a href="portfolio.html" class="hover:text-gray-500">作品集</a>
         <a href="blog.html" class="hover:text-gray-500">部落格</a>
         <a href="contactme.html" class="hover:text-gray-500">聯絡我</a>
       </nav>
+      
+      <!-- 漢堡菜單按鈕 - 只在小屏幕顯示 -->
+      <button id="mobile-menu-button" class="lg:hidden text-3xl">
+        ☰
+      </button>
+    </div>
+    
+    <!-- 移動端導航菜單 - 默認隱藏 -->
+    <div id="mobile-menu" class="hidden w-full bg-white shadow-lg absolute left-0 top-full mt-1 py-4 lg:hidden">
+      <div class="container mx-auto px-6">
+        <a href="about.html" class="block py-2 hover:text-amber-800">關於我</a>
+        <a href="portfolio.html" class="block py-2 hover:text-amber-800">作品集</a>
+        <a href="blog.html" class="block py-2 hover:text-amber-800">部落格</a>
+        <a href="contactme.html" class="block py-2 hover:text-amber-800">聯絡我</a>
+      </div>
     </div>
   </section>
 
@@ -129,6 +147,31 @@
             // 恢復按鈕狀態
             submitBtn.disabled = false;
             submitBtn.innerHTML = '送出訊息';
+          }
+        });
+      }
+    });
+  </script>
+  <!-- 在 </body> 標籤前添加這段腳本 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+      
+      if(menuButton && mobileMenu) {
+        menuButton.addEventListener('click', function() {
+          // 切換菜單顯示狀態
+          if(mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.remove('hidden');
+          } else {
+            mobileMenu.classList.add('hidden');
+          }
+        });
+        
+        // 點擊頁面其他區域時關閉菜單
+        document.addEventListener('click', function(e) {
+          if(!menuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+            mobileMenu.classList.add('hidden');
           }
         });
       }
