@@ -7,52 +7,26 @@
   <link rel="apple-touch-icon" href="https://img5.uploadhouse.com/fileuploads/31937/319376154887c9e20b063d9725d84b4b64b8a18d.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>部落格</title>
+  <title>部落格 | Angeloange</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background-color: #FAFAFA; color: #3E2723; font-family: 'Lora', serif; }
     .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
     .hero { background: url('https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg') center/cover no-repeat; }
-    .card { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; }
+    .card { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; display: flex; flex-direction: column; height: 100%; }
     .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
     .btn:hover { background: #3E2723; color: white; }
+    .card-img-top { height: 200px; object-fit: cover; width: 100%; flex-shrink: 0; }
+    .card-content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
+    .card-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .card-subtitle { color: #5D4037; margin-bottom: 1rem; font-size: 1rem; }
+    .card-meta { margin-top: auto; padding-top: 1rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .post-tag { background: #f9f5f2; color: #5D4037; padding: 4px 10px; border-radius: 15px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; display: inline-block; }
+    .post-date { color: #8D6E63; font-size: 14px; }
+    .btn-read-more { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-block; margin-top: 1rem; }
+    .btn-read-more:hover { background: #3E2723; color: white; }
+    .no-posts-message { min-height: 300px; display: flex; align-items: center; justify-content: center; grid-column: 1 / -1; }
   </style>
-  <script>
-    async function fetchRSS() {
-      const rssUrl = "https://ithelp.ithome.com.tw/users/20120822/rss";
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
-      try {
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(data.contents, "text/xml");
-        const items = xml.querySelectorAll("item");
-        
-        const blogContainer = document.getElementById("blog-posts");
-        blogContainer.innerHTML = "";
-        
-        items.forEach((item, index) => {
-          if (index >= 6) return;
-          const title = item.querySelector("title").textContent;
-          const link = item.querySelector("link").textContent;
-          let description = item.querySelector("description").textContent.replace(/<[^>]+>/g, "").substring(0, 80);
-          
-          const postElement = document.createElement("div");
-          postElement.className = "card p-6";
-          postElement.innerHTML = `
-            <h3 class="text-2xl font-semibold">${title}</h3>
-            <p class="mt-2 text-gray-600">${description}...</p>
-            <a href="${link}" target="_blank" class="btn inline-block mt-4 px-4 py-2 rounded-lg">閱讀更多</a>
-          `;
-          blogContainer.appendChild(postElement);
-        });
-      } catch (error) {
-        console.error("載入 RSS 失敗", error);
-        document.getElementById("blog-posts").innerHTML = "<p class='text-center text-red-500'>載入失敗，請稍後再試。</p>";
-      }
-    }
-    window.onload = fetchRSS;
-  </script>
 </head>
 <body>
   <!-- 導航欄 -->
@@ -99,8 +73,11 @@
   </div>
   <!-- 文章列表 -->
   <section class="container mx-auto py-16 px-6 max-w-6xl">
-    <div id="blog-posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <p class="text-center text-gray-600"></p>
+    <div id="blog-posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="col-span-full text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-800 mx-auto"></div>
+        <p class="mt-4 text-gray-600">載入文章中...</p>
+      </div>
     </div>
   </section>
   
@@ -118,21 +95,72 @@
   </footer>
     <!-- 在 </body> 標籤前添加這段腳本 -->
   <script>
+    async function loadBlogPosts() {
+      try {
+        const response = await fetch('/api/blog');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const posts = await response.json();
+        const container = document.getElementById('blog-posts');
+        container.innerHTML = '';
+        if (!posts || posts.length === 0) {
+          container.innerHTML = `
+            <div class="no-posts-message">
+              <div class="text-center">
+                <i class="fas fa-newspaper text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-500 text-xl">目前尚未發布文章，敬請期待！</p>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        posts.forEach(post => {
+          const postCard = document.createElement('div');
+          const coverImage = post.cover_image || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=800';
+          const tagsHtml = post.tags && post.tags.length > 0 ? post.tags.map(tag => `<span class="post-tag">${tag}</span>`).join('') : '';
+          let formattedDate = '';
+          if (post.published_at) {
+            try {
+              formattedDate = new Date(post.published_at).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch (e) { formattedDate = post.published_at; }
+          }
+          postCard.innerHTML = `
+            <div class="card bg-white shadow-lg rounded-lg overflow-hidden h-full flex flex-col">
+              <div class="overflow-hidden">
+                <img class="card-img-top transition-transform duration-300 hover:scale-105" src="${coverImage}" alt="${post.title}">
+              </div>
+              <div class="card-content flex-grow flex flex-col">
+                <h3 class="card-title">${post.title}</h3>
+                ${post.subtitle ? `<p class="card-subtitle">${post.subtitle}</p>` : ''}
+                <div class="mb-4">${tagsHtml}</div>
+                <div class="card-meta mt-auto">
+                  <span class="post-date">${formattedDate}</span>
+                  <a href="/blog/${post._id}" class="btn-read-more">閱讀文章</a>
+                </div>
+              </div>
+            </div>
+          `;
+          container.appendChild(postCard);
+        });
+      } catch (error) {
+        console.error('載入部落格文章失敗:', error);
+        const container = document.getElementById('blog-posts');
+        if (container) {
+          container.innerHTML = `
+            <div class="no-posts-message">
+              <p class="text-red-500 text-xl">載入文章時發生錯誤，請稍後再試</p>
+            </div>
+          `;
+        }
+      }
+    }
     document.addEventListener('DOMContentLoaded', function() {
+      loadBlogPosts();
       const menuButton = document.getElementById('mobile-menu-button');
       const mobileMenu = document.getElementById('mobile-menu');
-      
       if(menuButton && mobileMenu) {
         menuButton.addEventListener('click', function() {
-          // 切換菜單顯示狀態
-          if(mobileMenu.classList.contains('hidden')) {
-            mobileMenu.classList.remove('hidden');
-          } else {
-            mobileMenu.classList.add('hidden');
-          }
+          mobileMenu.classList.toggle('hidden');
         });
-        
-        // 點擊頁面其他區域時關閉菜單
         document.addEventListener('click', function(e) {
           if(!menuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
             mobileMenu.classList.add('hidden');

@@ -114,7 +114,7 @@
     /* 按鈕樣式 */
     .btn-primary {
         background-color: var(--primary-color);
-        border-color: var(--primary-color);
+        border-color: var (--primary-color);
     }
     
     .btn-primary:hover {
@@ -177,6 +177,11 @@
           <li class="nav-item">
             <a class="nav-link" data-bs-toggle="tab" href="#contacts">
               <i class="fas fa-comment me-2"></i>聯絡訊息
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#blog">
+              <i class="fas fa-blog me-2"></i>部落格管理
             </a>
           </li>
           <li class="nav-item mt-5">
@@ -338,6 +343,52 @@
               <div class="card-header">訊息列表</div>
               <div class="card-body">
                 <div id="contactsList">
+                  <p class="text-center">載入中...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 新增：部落格管理 -->
+          <div class="tab-pane fade" id="blog">
+            <h2 class="mb-4">部落格管理</h2>
+            <div class="card mb-4">
+              <div class="card-header">新增/編輯文章</div>
+              <div class="card-body">
+                <form id="blogForm">
+                  <input type="hidden" id="blog-id"> <!-- 用於編輯時存儲 ID -->
+                  <div class="mb-3">
+                    <label for="blog-title" class="form-label">標題</label>
+                    <input type="text" class="form-control" id="blog-title" name="title" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="blog-subtitle" class="form-label">副標題</label>
+                    <input type="text" class="form-control" id="blog-subtitle" name="subtitle">
+                  </div>
+                  <div class="mb-3">
+                    <label for="blog-content" class="form-label">文章內容</label>
+                    <textarea class="form-control" id="blog-content" name="content" rows="15"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="blog-cover" class="form-label">封面圖片網址</label>
+                    <input type="url" class="form-control" id="blog-cover" name="cover_image">
+                  </div>
+                  <div class="mb-3">
+                    <label for="blog-tags" class="form-label">標籤 (以逗號分隔)</label>
+                    <input type="text" class="form-control" id="blog-tags" name="tags">
+                  </div>
+                  <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="blog-publish" name="is_published">
+                    <label class="form-check-label" for="blog-publish">發佈文章</label>
+                  </div>
+                  <button type="button" class="btn btn-primary" id="saveBlogBtn">儲存文章</button>
+                  <button type="button" class="btn btn-secondary" id="clearBlogFormBtn">清空表單</button>
+                </form>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">文章列表</div>
+              <div class="card-body">
+                <div id="blogList" class="row">
                   <p class="text-center">載入中...</p>
                 </div>
               </div>
@@ -1035,6 +1086,170 @@
             alert('發生錯誤，請稍後再試');
         });
         }
+    // 新增：初始化部落格內容的富文本編輯器
+    tinymce.init({
+        selector: '#blog-content',
+        height: 400,
+        plugins: 'advlist autolink lists link image charmap print preview anchor ' +
+                'searchreplace visualblocks code fullscreen ' +
+                'insertdatetime media table paste code help wordcount',
+        toolbar: 'undo redo | formatselect | ' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | image code | help',
+        language: 'zh_TW',
+        menubar: 'file edit view insert format tools table help',
+        content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; }'
+    });
+    // 綁定部落格標籤頁點擊事件
+    document.querySelector('a[href="#blog"]').addEventListener('click', loadBlogPosts);
+    // 綁定保存部落格文章按鈕的點擊事件
+    document.getElementById('saveBlogBtn').addEventListener('click', submitBlogPost);
+    // 綁定清空部落格表單按鈕的點擊事件
+    document.getElementById('clearBlogFormBtn').addEventListener('click', clearBlogForm);
+    // 清空部落格表單
+    function clearBlogForm() {
+        document.getElementById('blog-id').value = '';
+        document.getElementById('blog-title').value = '';
+        document.getElementById('blog-subtitle').value = '';
+        document.getElementById('blog-cover').value = '';
+        document.getElementById('blog-tags').value = '';
+        document.getElementById('blog-publish').checked = false;
+        try { tinymce.get('blog-content').setContent(''); } catch (err) {}
+        document.getElementById('saveBlogBtn').textContent = '儲存文章';
+    }
+    // 載入部落格文章列表 (後台)
+    function loadBlogPosts() {
+      fetch('/api/blog?include_drafts=true')
+        .then(response => response.json())
+        .then(data => {
+          const blogList = document.getElementById('blogList');
+          blogList.innerHTML = '';
+          if (!data || data.length === 0) {
+            blogList.innerHTML = '<div class="col-12 text-center">暫無文章</div>';
+            return;
+          }
+          data.forEach(post => {
+            let safeDesc = '';
+            if (post.subtitle) {
+              safeDesc = post.subtitle.substring(0, 100) + (post.subtitle.length > 100 ? '...' : '');
+            }
+            const statusBadge = post.is_published
+              ? '<span class="badge bg-success">已發布</span>'
+              : '<span class="badge bg-secondary">草稿</span>';
+            let displayDate = '未知';
+            if (post.published_at) {
+                try { displayDate = new Date(post.published_at).toLocaleDateString('zh-TW'); } catch(e) { displayDate = post.published_at; }
+            } else if (post.created_at) {
+                 try { displayDate = new Date(post.created_at).toLocaleDateString('zh-TW'); } catch(e) { displayDate = post.created_at; }
+            }
+            blogList.innerHTML += `
+              <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                  <img src="${post.cover_image || 'https://via.placeholder.com/300x150?text=無圖片'}" class="card-img-top" alt="${post.title}">
+                  <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                      <h5 class="card-title mb-0">${post.title}</h5>
+                      ${statusBadge}
+                    </div>
+                    <p class="card-text text-muted small mb-2">${displayDate}</p>
+                    <p class="card-text flex-grow-1">${safeDesc}</p>
+                    ${post.tags && post.tags.length > 0 ? 
+                      `<div class="mb-2">
+                        ${post.tags.map(tag => `<span class="badge bg-light text-dark me-1">${tag}</span>`).join('')}
+                      </div>` : ''}
+                  </div>
+                  <div class="card-footer bg-white d-flex justify-content-between">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editBlogPost('${post._id}')">編輯</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBlogPost('${post._id}')">刪除</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+        })
+        .catch(error => {
+          console.error('獲取部落格列表失敗:', error);
+          document.getElementById('blogList').innerHTML = '<div class="col-12 text-center text-danger">載入文章列表失敗</div>';
+        });
+    }
+    // 提交新文章或更新文章
+    function submitBlogPost() {
+      const postId = document.getElementById('blog-id').value;
+      const isEditing = !!postId;
+      let content = "";
+      try { const editor = tinymce.get('blog-content'); if (editor) { content = editor.getContent(); } } catch (err) {}
+      const formData = {
+        title: document.getElementById('blog-title').value,
+        subtitle: document.getElementById('blog-subtitle').value,
+        content: content,
+        cover_image: document.getElementById('blog-cover').value,
+        tags: document.getElementById('blog-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
+        is_published: document.getElementById('blog-publish').checked
+      };
+      const url = isEditing ? `/api/blog/${postId}` : '/api/blog';
+      const method = isEditing ? 'PUT' : 'POST';
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(`文章${isEditing ? '更新' : '新增'}成功!`);
+          clearBlogForm();
+          loadBlogPosts();
+        } else {
+          alert(`文章${isEditing ? '更新' : '新增'}失敗: ` + (data.message || '未知錯誤'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('發生錯誤，請稍後再試');
+      });
+    }
+    // 編輯文章 (填充表單)
+    function editBlogPost(id) {
+      fetch(`/api/blog/${id}`)
+        .then(response => response.json())
+        .then(post => {
+          document.getElementById('blog-id').value = post._id;
+          document.getElementById('blog-title').value = post.title || '';
+          document.getElementById('blog-subtitle').value = post.subtitle || '';
+          document.getElementById('blog-cover').value = post.cover_image || '';
+          document.getElementById('blog-publish').checked = post.is_published || false;
+          document.getElementById('blog-tags').value = (post.tags && Array.isArray(post.tags)) ? post.tags.join(', ') : '';
+          try { tinymce.get('blog-content').setContent(post.content || ''); } catch(err) {}
+          document.getElementById('saveBlogBtn').textContent = '更新文章';
+          document.getElementById('blogForm').scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(error => {
+          console.error('獲取文章詳情失敗:', error);
+          alert('無法獲取文章詳情，請稍後再試');
+        });
+    }
+    // 刪除文章
+    function deleteBlogPost(id) {
+      if (confirm('確定要刪除此文章嗎？此操作不可恢復!')) {
+        fetch(`/api/blog/${id}`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('文章已成功刪除');
+            loadBlogPosts();
+          } else {
+            alert('刪除失敗: ' + (data.message || '未知錯誤'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('發生錯誤，請稍後再試');
+        });
+      }
+    }
   </script>
 </body>
 </html>

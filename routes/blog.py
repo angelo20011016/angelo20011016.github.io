@@ -29,11 +29,20 @@ def blog_post(post_id):
 @blog_bp.route('/api/blog', methods=['GET'])
 def get_blog_posts():
     try:
-        # 只獲取已發佈的文章，按發佈日期倒序排列
-        posts = list(mongo.db.blog_posts.find({"is_published": True}).sort("published_at", -1))
-        # 格式化文檔
+        # 新增：根據 include_drafts 參數決定是否回傳所有文章
+        include_drafts = request.args.get('include_drafts', 'false').lower() == 'true'
+        query = {}
+        sort_field = 'published_at' if not include_drafts else 'created_at'
+        sort_order = -1
+
+        if not include_drafts:
+            query['is_published'] = True
+            # 只顯示已發佈的文章，依發佈日期倒序
+            posts = list(mongo.db.blog_posts.find(query).sort(sort_field, sort_order))
+        else:
+            # 顯示所有文章（包含草稿），依建立日期倒序
+            posts = list(mongo.db.blog_posts.find().sort(sort_field, sort_order))
         posts = format_documents(posts)
-            
         return jsonify(posts)
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -158,3 +167,19 @@ def delete_blog_post(post_id):
     except Exception as e:
         print(f"刪除文章錯誤: {str(e)}")
         return jsonify({"success": False, "message": "文章刪除失敗"}), 500
+
+# 新增：獲取部落格文章總數 (區分已發佈或全部)
+@blog_bp.route('/api/blog/count', methods=['GET'])
+def get_blog_post_count():
+    """獲取部落格文章總數"""
+    try:
+        # 檢查是否只計算已發佈的文章
+        published_only = request.args.get('published_only', 'true').lower() == 'true'
+        query = {}
+        if published_only:
+            query['is_published'] = True
+        count = mongo.db.blog_posts.count_documents(query)
+        return jsonify({'count': count}), 200
+    except Exception as e:
+        print(f"獲取文章數量錯誤: {str(e)}")
+        return jsonify({'error': '無法獲取文章數量'}), 500
