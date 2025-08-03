@@ -181,6 +181,12 @@
         <a href="portfolio.html" class="hover:text-gray-500">作品集</a>
         <a href="blog.html" class="hover:text-gray-500">部落格</a>
         <a href="contactme.html" class="hover:text-gray-500">聯絡我</a>
+        {% if user_email %}
+          <span class="ml-4">Hi, {{ user_email }}</span>
+          <button id="logout-btn" class="ml-2 btn px-4 py-1 rounded-lg" onclick="logoutUser()">登出</button>
+        {% else %}
+          <button id="open-auth-modal" class="ml-4 btn px-4 py-1 rounded-lg">登入/註冊</button>
+        {% endif %}
       </nav>
       
       <!-- 漢堡菜單按鈕 - 只在小屏幕顯示 -->
@@ -233,10 +239,10 @@
           </p>
           
           <div class="flex gap-4 mt-6">
-            <a href="portfolio.html" class="btn px-5 py-2 rounded-lg flex items-center">
+            <a href="portfolio.html" class="btn px-5 py-2 rounded-lg flex items中心">
               <i class="fas fa-briefcase mr-2"></i> 查看作品集
             </a>
-            <a href="contactme.html" class="btn px-5 py-2 rounded-lg flex items-center">
+            <a href="contactme.html" class="btn px-5 py-2 rounded-lg flex items中心">
               <i class="fas fa-envelope mr-2"></i> 與我聯繫
             </a>
           </div>
@@ -322,7 +328,7 @@
         <!-- 輪播內容區域 -->
         <div id="carousel-container" class="w-full h-full">
           <!-- 輪播項目由JavaScript動態生成 -->
-          <div class="text-center py-16">
+          <div class="text中心 py-16">
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-800 mx-auto"></div>
             <p class="mt-4 text-gray-600">載入中...</p>
           </div>
@@ -335,8 +341,8 @@
       </div>
       
       <!-- 查看全部按鈕 -->
-      <div class="text-center mt-6">
-        <a href="portfolio.html" target="_blank" class="btn px-6 py-2 rounded-lg inline-flex items-center">
+      <div class="text中心 mt-6">
+        <a href="portfolio.html" target="_blank" class="btn px-6 py-2 rounded-lg inline-flex items中心">
           <span>查看全部作品</span>
           <i class="fas fa-arrow-right ml-2"></i>
         </a>
@@ -360,8 +366,8 @@
         </div>
       </div>
       <!-- 查看所有文章按鈕 -->
-      <div class="mt-8 text-center">
-        <a href="/blog.html" class="btn px-6 py-2 rounded-lg inline-flex items-center">
+      <div class="mt-8 text中心">
+        <a href="/blog.html" class="btn px-6 py-2 rounded-lg inline-flex items中心">
           <span>查看所有文章</span>
           <i class="fas fa-arrow-right ml-2"></i>
         </a>
@@ -380,14 +386,14 @@
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <div class="bg-amber-50 p-6 rounded-lg">
-          <h3 class="text-xl font-bold mb-3 flex items-center">
+          <h3 class="text-xl font-bold mb-3 flex items中心">
             <i class="fas fa-rocket mr-2 text-amber-800"></i> Side Project 平台
           </h3>
           <p>打造一個開放的平台，提供各種實用的小工具和解決方案，幫助有需要的人解決實際問題。</p>
         </div>
         
         <div class="bg-amber-50 p-6 rounded-lg">
-          <h3 class="text-xl font-bold mb-3 flex items-center">
+          <h3 class="text-xl font-bold mb-3 flex items中心">
             <i class="fas fa-newspaper mr-2 text-amber-800"></i> 電子報
           </h3>
           <p>分享學習心得、技術見解和有價值的資源，建立一個持續學習和成長的社群。</p>
@@ -421,7 +427,7 @@
         <div class="h-40 overflow-hidden">
           <img src="https://img6.uploadhouse.com/fileuploads/31936/31936866e532037a3fc020e252756014fe9fbebf.jpg" alt="跑步" class="w-full h-full object-cover">
         </div>
-        <div class="p-3 text-center bg-amber-50">
+        <div class="p-3 text中心 bg-amber-50">
           <h3 class="font-bold">跑步</h3>
         </div>
       </div>
@@ -432,7 +438,7 @@
         <div class="h-40 overflow-hidden">
           <img src="https://img2.uploadhouse.com/fileuploads/31936/3193686247bb0dd7f71643ea2b64c918032da91b.jpg" alt="咖啡" class="w-full h-full object-cover">
         </div>
-        <div class="p-3 text-center bg-amber-50">
+        <div class="p-3 text中心 bg-amber-50">
           <h3 class="font-bold">咖啡</h3>
         </div>
       </div>
@@ -442,7 +448,7 @@
         <div class="h-40 overflow-hidden">
           <img src="https://img8.uploadhouse.com/fileuploads/31937/31937298023d322cb396e779e18f49439d96f45e.png" alt="健身" class="w-full h-full object-cover" >
         </div>
-        <div class="p-3 text-center bg-amber-50">
+        <div class="p-3 text中心 bg-amber-50">
           <h3 class="font-bold">健身</h3>
         </div>
       </div>
@@ -466,7 +472,7 @@
 
   <!-- 頁腳 -->
   <footer class="bg-gray-100 text-gray-800 py-6 mt-12">
-    <div class="container mx-auto flex flex-col items-center space-y-4">
+    <div class="container mx-auto flex flex-col items中心 space-y-4">
       <div class="flex space-x-6">
         <a href="https://www.instagram.com/angelo__1016/" target="_blanker" class="hover:text-gray-500">IG</a>
         
@@ -519,7 +525,7 @@
       
       if (featuredItems.length === 0) {
         document.getElementById('carousel-container').innerHTML = 
-          '<p class="text-center">暫無作品</p>';
+          '<p class="text中心">暫無作品</p>';
         return;
       }
       
@@ -559,7 +565,7 @@
     } catch (error) {
       console.error('載入作品失敗', error);
       document.getElementById('carousel-container').innerHTML = 
-        '<p class="text-center text-red-500">載入作品失敗，請稍後再試</p>';
+        '<p class="text中心 text-red-500">載入作品失敗，請稍後再試</p>';
     }
   }
 
@@ -740,6 +746,152 @@
         });
       }
     });
+  </script>
+  <!-- 在 </body> 結尾前加會員彈窗元件 -->
+  <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+      <button id="close-auth-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+      <div id="auth-tabs" class="flex mb-6 border-b">
+        <button class="flex-1 py-2 text-center font-bold" id="tab-login">登入</button>
+        <button class="flex-1 py-2 text-center font-bold" id="tab-register">註冊</button>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <input type="email" id="login-email" class="w-full border rounded px-3 py-2" placeholder="Email" required>
+        <input type="password" id="login-password" class="w-full border rounded px-3 py-2" placeholder="密碼" required>
+        <button type="submit" class="btn w-full py-2">登入</button>
+        <div class="text-right mt-2">
+          <a href="#" id="show-forgot" class="text-sm text-blue-600 hover:underline">忘記密碼？</a>
+        </div>
+        <div id="login-msg" class="text-sm text-red-600"></div>
+      </form>
+      <form id="register-form" class="space-y-4 hidden">
+        <input type="email" id="register-email" class="w-full border rounded px-3 py-2" placeholder="Email" required>
+        <input type="password" id="register-password" class="w-full border rounded px-3 py-2" placeholder="密碼" required>
+        <input type="text" id="register-nickname" class="w-full border rounded px-3 py-2" placeholder="暱稱 (可選)">
+        <button type="submit" class="btn w-full py-2">註冊</button>
+        <div id="register-msg" class="text-sm text-red-600"></div>
+      </form>
+      <form id="forgot-form" class="space-y-4 hidden">
+        <input type="email" id="forgot-email" class="w-full border rounded px-3 py-2" placeholder="請輸入註冊 Email" required>
+        <button type="submit" class="btn w-full py-2">寄送重設密碼信</button>
+        <div id="forgot-msg" class="text-sm text-red-600"></div>
+        <div class="text-right mt-2">
+          <a href="#" id="back-to-login" class="text-sm text-blue-600 hover:underline">返回登入</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    // 彈窗開關
+    document.getElementById('open-auth-modal').onclick = function() {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      showTab('login');
+    };
+    document.getElementById('close-auth-modal').onclick = function() {
+      document.getElementById('auth-modal').classList.add('hidden');
+    };
+    // 切換分頁
+    document.getElementById('tab-login').onclick = function() { showTab('login'); };
+    document.getElementById('tab-register').onclick = function() { showTab('register'); };
+    function showTab(tab) {
+      document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('forgot-form').classList.add('hidden');
+      document.getElementById('tab-login').classList.toggle('border-b-2', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('border-b-2', tab === 'register');
+    }
+    // 忘記密碼切換
+    document.getElementById('show-forgot').onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('forgot-form').classList.remove('hidden');
+    };
+    document.getElementById('back-to-login').onclick = function(e) {
+      e.preventDefault();
+      showTab('login');
+    };
+    // 登入表單提交
+    document.getElementById('login-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const msg = document.getElementById('login-msg');
+      msg.textContent = '';
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        msg.style.color = 'green';
+        msg.textContent = '登入成功！';
+        setTimeout(() => location.reload(), 800);
+      } else {
+        msg.style.color = 'red';
+        msg.textContent = data.message || '登入失敗';
+      }
+    };
+    // 註冊表單提交
+    document.getElementById('register-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value;
+      const nickname = document.getElementById('register-nickname').value.trim();
+      const msg = document.getElementById('register-msg');
+      msg.textContent = '';
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, nickname })
+      });
+      const data = await res.json();
+      if (data.success) {
+        msg.style.color = 'green';
+        msg.textContent = '註冊成功，請登入';
+        setTimeout(() => showTab('login'), 1000);
+      } else {
+        msg.style.color = 'red';
+        msg.textContent = data.message || '註冊失敗';
+      }
+    };
+    // 忘記密碼表單提交
+    document.getElementById('forgot-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgot-email').value.trim();
+      const msg = document.getElementById('forgot-msg');
+      msg.textContent = '';
+      const res = await fetch('/api/request_reset_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        msg.style.color = 'green';
+        msg.textContent = '已寄送重設密碼信，請檢查信箱';
+      } else {
+        msg.style.color = 'red';
+        msg.textContent = data.message || '寄送失敗';
+      }
+    };
+    // 登出按鈕
+    document.addEventListener('DOMContentLoaded', function() {
+      var logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.onclick = async function() {
+          await fetch('/api/logout', { method: 'POST' });
+          location.reload();
+        };
+      }
+    });
+    function logoutUser() {
+      fetch('/api/logout', { method: 'POST' })
+        .then(() => {
+          location.reload();
+        });
+    }
   </script>
 </body>
 </html>

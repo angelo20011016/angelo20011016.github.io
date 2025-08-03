@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect
+from flask import Blueprint, render_template, redirect, session
 
 main = Blueprint('main', __name__)
 
@@ -8,7 +8,8 @@ def home():
 
 @main.route('/about.html')
 def about():
-    return render_template('about.html')
+    user_email = session.get('user_email')
+    return render_template('about.html', user_email=user_email)
 
 @main.route('/freeresource.html')
 def freeresource():
