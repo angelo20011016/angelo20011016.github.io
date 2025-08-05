@@ -1,37 +1,49 @@
 from flask import Flask
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file FIRST
+load_dotenv()
+
 from services.db_service import init_db
 from routes import init_routes
 from config import Config
 from services.mail_service import init_mail
+
 def create_app(config_class=Config):
-    """創建並配置 Flask 應用程式"""
+    """Create and configure the Flask application."""
     app = Flask(__name__)
     
-    # 載入配置
+    # --- Centralized Configuration Loading ---
     app.config.from_object(config_class)
-    app.config["MONGO_URI"] = config_class.MONGODB_URI
-    app.secret_key = config_class.SECRET_KEY
-    init_mail(app)
-    # 初始化數據庫
-    init_db(app)
     
-    # 註冊路由
+    # Manually load every key from .env into app.config
+    for key in app.config['CONFIG_KEYS']:
+        app.config[key] = os.getenv(key)
+
+    # 修正：確保 MONGO_URI 被設定
+    if app.config.get('MONGODB_URI'):
+        app.config['MONGO_URI'] = app.config['MONGODB_URI']
+
+    # Special handling for integer ports
+    if app.config.get('MAIL_PORT'):
+        app.config['MAIL_PORT'] = int(app.config['MAIL_PORT'])
+    
+    # --- End of Centralized Loading ---
+
+    # Debugging: Check final config values
+    print("--- Final Config Loaded in App ---")
+    print(f"MONGO_URI: {app.config.get('MONGODB_URI')}")
+    print(f"AZURE_KEY: {bool(app.config.get('AZURE_SPEECH_KEY'))}")
+    print("----------------------------------")
+
+    # Initialize extensions AFTER config is fully loaded
+    init_mail(app)
+    init_db(app)
     init_routes(app)
-    print("MAIL_USERNAME:", app.config.get("MAIL_USERNAME"))
-    print("MAIL_PASSWORD:", app.config.get("MAIL_PASSWORD"))
-    print("MAIL_SERVER:", app.config.get("MAIL_SERVER"))
-    print("MAIL_PORT:", app.config.get("MAIL_PORT"))
-    print("MAIL_USE_TLS:", app.config.get("MAIL_USE_TLS")) 
+    
     return app
 
-# 創建應用程式實例
-app = create_app()
-
 if __name__ == '__main__':
-    try:
-        # 在開發環境允許外部連接
-        app.run(host='0.0.0.0', port=5001, debug=True)
-   
-
-    except Exception as e:
-        print(f"Error starting server: {e}")
+    app = create_app(Config)
+    app.run(host='0.0.0.0', port=5001, debug=True)

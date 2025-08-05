@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <!-- Meta tags and CSS links -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>即時翻譯 | Angelo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://img5.uploadhouse.com/fileuploads/31937/319376154887c9e20b063d9725d84b4b64b8a18d.png" type="image/png">
+  <style>
+    body { background-color: #FAFAFA; color: #3E2723; font-family: 'Roboto', sans-serif; }
+    .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+    .card { background: #FFFFFF; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); border-radius: 12px; }
+    .btn { border: 2px solid #3E2723; color: #3E2723; transition: all 0.3s ease; }
+    .btn:hover { background: #3E2723; color: white; }
+    .btn-primary { background: #3E2723; color: white; }
+    .btn-primary:hover { background: #5D4037; }
+    .status-indicator { height: 12px; width: 12px; border-radius: 50%; display: inline-block; vertical-align: middle; transition: background-color 0.3s ease; }
+    .status-idle { background-color: #BDBDBD; }
+    .status-recording { background-color: #E53935; animation: pulse 1.5s infinite; }
+    .status-processing { background-color: #FFB300; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); } 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); } }
+  </style>
+</head>
+<body class="pt-20">
+
+  <!-- Navigation Bar -->
+  <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
+    <div class="container mx-auto flex items-center justify-between">
+      <a href="/about.html" class="text-2xl font-bold">HappyWeCan</a>
+      <nav class="hidden lg:flex space-x-6">
+        <a href="/about.html" class="hover:text-gray-500">關於我</a>
+        <a href="/portfolio.html" class="hover:text-gray-500">作品集</a>
+        <a href="/blog.html" class="hover:text-gray-500">部落格</a>
+        <a href="/contactme.html" class="hover:text-gray-500">聯絡我</a>
+        <a href="/translator" class="font-bold text-amber-800">即時翻譯</a>
+      </nav>
+      <button id="mobile-menu-button" class="lg:hidden text-3xl">☰</button>
+    </div>
+    <div id="mobile-menu" class="hidden w-full bg-white shadow-lg absolute left-0 top-full mt-1 py-4 lg:hidden">
+        <!-- Mobile menu links -->
+    </div>
+  </section>
+
+  <!-- Translator Body -->
+  <section class="container mx-auto py-16 px-6 max-w-4xl">
+    <div class="card p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold">即時語音翻譯</h1>
+        <div class="mt-4 flex justify-center items-center gap-4">
+            <select id="source-lang" class="py-2 px-3 border border-gray-300 rounded-lg focus:ring-amber-800 focus:border-amber-800">
+                <option value="zh-TW">中文 (繁體)</option>
+                <option value="en-US">English (US)</option>
+                <option value="ja-JP">日本語</option>
+            </select>
+            <button id="swap-lang-btn" class="btn p-2 rounded-full w-10 h-10 flex items-center justify-center">
+                <i class="fas fa-exchange-alt"></i>
+            </button>
+            <select id="target-lang" class="custom-select bg-white py-2 px-4 border border-gray-300 rounded-lg focus:ring-amber-800 focus:border-amber-800">
+                <option value="ja-JP">日本語</option>
+                <option value="en-US">English (US)</option>
+                <option value="zh-TW">中文 (繁體)</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center justify-center space-y-4 mb-8">
+        <button id="enable-mic-btn" class="btn rounded-full w-40 h-12 mb-4">啟用麥克風</button>
+        <button id="record-btn" class="btn-primary rounded-full w-24 h-24 flex items-center justify-center text-4xl shadow-lg transform hover:scale-105 transition-transform" style="display:none;">
+          <i id="record-icon" class="fas fa-microphone"></i>
+        </button>
+        <div class="flex items-center space-x-3">
+          <div id="status-indicator" class="status-indicator status-idle"></div>
+          <span id="status-text" class="text-lg text-gray-600">待機中</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 id="source-lang-header" class="text-xl font-bold mb-2">原文</h2>
+          <div class="bg-gray-50 rounded-lg p-4 h-64">
+            <textarea id="original-text" class="w-full h-full bg-transparent border-none resize-none focus:ring-0" placeholder="按下麥克風開始說話..." readonly></textarea>
+          </div>
+        </div>
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <h2 id="target-lang-header" class="text-xl font-bold">翻譯</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">自動播放</span>
+                    <label for="autoplay-toggle" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoplay-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-800"></div>
+                    </label>
+                </div>
+            </div>
+          <div class="bg-gray-50 rounded-lg p-4 h-64 flex flex-col">
+            <textarea id="translated-text" class="w-full h-full bg-transparent border-none resize-none focus:ring-0 flex-grow" placeholder="翻譯結果將顯示在這裡..." readonly></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-gray-800 py-6 mt-12">
+      <!-- Footer content -->
+  </footer>
+
+  <script>
+    // --- 麥克風權限請求按鈕 ---
+    const enableMicBtn = document.getElementById('enable-mic-btn');
+    const recordBtn = document.getElementById('record-btn');
+    enableMicBtn.addEventListener('click', async function() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('您的瀏覽器不支援麥克風功能，請使用最新版 Chrome、Edge 或 Safari。');
+        return;
+      }
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        enableMicBtn.style.display = 'none';
+        recordBtn.style.display = '';
+        alert('麥克風權限已啟用，您可以開始錄音。');
+      } catch (err) {
+        alert('無法取得麥克風權限，請檢查瀏覽器設定並允許本網站存取麥克風。');
+      }
+    });
+
+    // --- 麥克風權限檢查 ---
+    async function checkMicrophonePermission() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('您的瀏覽器不支援麥克風功能，請使用最新版 Chrome、Edge 或 Safari。');
+        return;
+      }
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        // 權限取得成功，可啟用麥克風功能
+      } catch (err) {
+        alert('無法取得麥克風權限，請檢查瀏覽器網址列左側的麥克風圖示，並允許本網站存取麥克風。\n如仍有問題，請至瀏覽器設定中允許麥克風，或關閉防毒/隱私擋控軟體。');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', checkMicrophonePermission);
+
+    // --- DOM Elements ---
+    const recordIcon = document.getElementById('record-icon');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const sourceLangSelect = document.getElementById('source-lang');
+    const targetLangSelect = document.getElementById('target-lang');
+    const swapLangBtn = document.getElementById('swap-lang-btn');
+    const sourceLangHeader = document.getElementById('source-lang-header');
+    const targetLangHeader = document.getElementById('target-lang-header');
+    const originalTextArea = document.getElementById('original-text');
+    const translatedTextArea = document.getElementById('translated-text');
+    const autoplayToggle = document.getElementById('autoplay-toggle');
+
+    // --- State ---
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+
+    // --- Functions ---
+    function updateLanguageHeaders() {
+        const sourceLangText = sourceLangSelect.options[sourceLangSelect.selectedIndex].text;
+        const targetLangText = targetLangSelect.options[targetLangSelect.selectedIndex].text;
+        sourceLangHeader.textContent = `原文 (${sourceLangText})`;
+        targetLangHeader.textContent = `翻譯 (${targetLangText})`;
+    }
+
+    function swapLanguages() {
+        const sourceValue = sourceLangSelect.value;
+        sourceLangSelect.value = targetLangSelect.value;
+        targetLangSelect.value = sourceValue;
+        updateLanguageHeaders();
+    }
+    
+    function handleLanguageChange() {
+        if (sourceLangSelect.value === targetLangSelect.value) {
+            // Find the next available language to avoid conflict
+            for (let i = 0; i < targetLangSelect.options.length; i++) {
+                if (targetLangSelect.options[i].value !== sourceLangSelect.value) {
+                    targetLangSelect.value = targetLangSelect.options[i].value;
+                    break;
+                }
+            }
+        }
+        updateLanguageHeaders();
+    }
+
+    function updateUIForState(state) {
+        if (state === 'recording') {
+            recordIcon.classList.remove('fa-microphone');
+            recordIcon.classList.add('fa-stop');
+            recordBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+            statusIndicator.className = 'status-indicator status-recording';
+            statusText.textContent = '錄音中...';
+        } else if (state === 'processing') {
+            recordIcon.classList.remove('fa-stop');
+            recordIcon.classList.add('fa-microphone');
+            recordBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            statusIndicator.className = 'status-indicator status-processing';
+            statusText.textContent = '處理中...';
+        } else { // idle
+            recordIcon.classList.remove('fa-stop');
+            recordIcon.classList.add('fa-microphone');
+            recordBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            statusIndicator.className = 'status-indicator status-idle';
+            statusText.textContent = '待機中';
+        }
+    }
+
+    async function sendAudioToServer(audioBlob) {
+        const formData = new FormData();
+        formData.append('audio_data', audioBlob, 'recording.webm');
+        formData.append('source_lang', sourceLangSelect.value);
+        formData.append('target_lang', targetLangSelect.value);
+
+        try {
+            const response = await fetch('/api/translate-audio', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+            const data = await response.json();
+            originalTextArea.value = data.original_text;
+            translatedTextArea.value = data.translated_text;
+            if (autoplayToggle.checked) {
+                console.log("Autoplay is ON. Playing TTS...");
+                // TODO: Add actual TTS call here
+            }
+        } catch (error) {
+            console.error("Error during translation:", error);
+            alert("翻譯時發生錯誤，請查看主控台以獲取詳細資訊。");
+        } finally {
+            updateUIForState('idle');
+        }
+    }
+
+    function startRecording(stream) {
+        isRecording = true;
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorder.addEventListener("dataavailable", event => audioChunks.push(event.data));
+        mediaRecorder.addEventListener("stop", () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            sendAudioToServer(audioBlob);
+        });
+        mediaRecorder.start();
+        updateUIForState('recording');
+    }
+
+    function stopRecording() {
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+            isRecording = false;
+        }
+    }
+
+    // --- Event Listeners ---
+    recordBtn.addEventListener('click', async () => {
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                startRecording(stream);
+            } catch (error) {
+                alert("無法取得麥克風權限，請檢查您的瀏覽器設定。");
+            }
+        } else {
+            stopRecording();
+        }
+    });
+
+    swapLangBtn.addEventListener('click', swapLanguages);
+    sourceLangSelect.addEventListener('change', handleLanguageChange);
+    targetLangSelect.addEventListener('change', handleLanguageChange);
+
+    // --- Initial Setup ---
+    updateLanguageHeaders();
+
+  </script>
+</body>
+</html>
