@@ -3,6 +3,8 @@ import os
 import subprocess
 import azure.cognitiveservices.speech as speechsdk
 import google.generativeai as genai
+import time
+import base64
 
 translator_bp = Blueprint('translator_bp', __name__)
 
@@ -62,6 +64,45 @@ def translate_text_with_gemini(text, source_lang, target_lang):
     response = model.generate_content(prompt)
     return response.text.strip()
 
+def text_to_speech(text, target_lang):
+    """Uses Azure Text-to-Speech to synthesize speech from text."""
+    speech_key = current_app.config['AZURE_SPEECH_KEY']
+    speech_region = current_app.config['AZURE_SPEECH_REGION']
+
+    if not speech_key or not speech_region:
+        raise ValueError("Azure Speech credentials are not configured.")
+
+    speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
+    
+    # Map target_lang to a voice name. This is a simplified mapping.
+    # For production, you might want a more robust mapping or allow selection.
+    if target_lang == 'zh-TW':
+        speech_config.speech_synthesis_voice_name = "zh-TW-HsiaoChenNeural"
+    elif target_lang == 'en-US':
+        speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
+    elif target_lang == 'ja-JP':
+        speech_config.speech_synthesis_voice_name = "ja-JP-NanamiNeural"
+    else:
+        speech_config.speech_synthesis_voice_name = "en-US-JennyNeural" # Default
+
+    # Use AudioOutputFormat.Riff16Khz16BitMonoPcm for WAV output
+    speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Riff16Khz16BitMonoPcm)
+
+    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None) # audio_config=None for in-memory stream
+
+    result = speech_synthesizer.speak_text_async(text).get()
+
+    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+        audio_data = result.audio_data
+        return base64.b64encode(audio_data).decode('utf-8') # Return Base64 encoded audio
+    elif result.reason == speechsdk.ResultReason.Canceled:
+        cancellation_details = result.cancellation_details
+        print(f"Speech synthesis canceled: {cancellation_details.reason}")
+        if cancellation_details.reason == speechsdk.CancellationReason.Error:
+            print(f"Error details: {cancellation_details.error_details}")
+        return None
+    return None
+
 
 @translator_bp.route('/api/translate-audio', methods=['POST'])
 def translate_audio():
@@ -85,23 +126,38 @@ def translate_audio():
         # 2. Convert mp4 to wav using ffmpeg
         wav_path = "temp_recording.wav"
         # This command converts the mp4 to a 16-bit PCM WAV file, which is what Azure SDK expects
+        start_ffmpeg_time = time.time()
         command = f"ffmpeg -i {mp4_path} -acodec pcm_s16le -ar 16000 -ac 1 {wav_path} -y"
         subprocess.run(command, shell=True, check=True)
+        ffmpeg_time = time.time() - start_ffmpeg_time
 
         # 3. Speech to Text from the converted WAV file
+        start_stt_time = time.time()
         original_text = speech_to_text(wav_path, source_lang)
+        stt_time = time.time() - start_stt_time
         print(f"Original Text (from STT): {original_text}")
         
         if original_text.startswith('('): # Handle STT errors
-            return jsonify({"original_text": original_text, "translated_text": ""})
+            return jsonify({"original_text": original_text, "translated_text": "", "stt_time": stt_time, "translation_time": 0, "tts_time": 0, "audio_base64": ""})
 
         # 4. Translate Text
+        start_translation_time = time.time()
         translated_text = translate_text_with_gemini(original_text, source_lang, target_lang)
+        translation_time = time.time() - start_translation_time
         print(f"Translated Text (from Gemini): {translated_text}")
+
+        # 5. Text to Speech
+        start_tts_time = time.time()
+        audio_base64 = text_to_speech(translated_text, target_lang)
+        tts_time = time.time() - start_tts_time
 
         return jsonify({
             "original_text": original_text,
-            "translated_text": translated_text
+            "translated_text": translated_text,
+            "stt_time": stt_time,
+            "translation_time": translation_time,
+            "tts_time": tts_time,
+            "audio_base64": audio_base64
         })
 
     except subprocess.CalledProcessError as e:

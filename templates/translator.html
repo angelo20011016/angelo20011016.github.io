@@ -90,15 +90,23 @@
             <div class="flex items-center justify-between mb-2">
                 <h2 id="target-lang-header" class="text-xl font-bold">翻譯</h2>
                 <div class="flex items-center space-x-2">
+                    <button id="play-translated-audio" class="btn p-2 rounded-full w-10 h-10 flex items-center justify-center" style="display:none;">
+                        <i class="fas fa-play"></i>
+                    </button>
                     <span class="text-sm text-gray-600">自動播放</span>
                     <label for="autoplay-toggle" class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="autoplay-toggle" class="sr-only peer">
+                        <input type="checkbox" id="autoplay-toggle" class="sr-only peer" checked>
                         <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-800"></div>
                     </label>
                 </div>
             </div>
           <div class="bg-gray-50 rounded-lg p-4 h-64 flex flex-col">
             <textarea id="translated-text" class="w-full h-full bg-transparent border-none resize-none focus:ring-0 flex-grow" placeholder="翻譯結果將顯示在這裡..." readonly></textarea>
+          </div>
+          <div class="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-700">
+            <p class="mb-1"><strong class="text-gray-800">語音轉文字時間:</strong> <span id="stt-time" class="font-semibold text-amber-800">0.00</span> 秒</p>
+            <p class="mb-1"><strong class="text-gray-800">翻譯時間:</strong> <span id="translation-time" class="font-semibold text-amber-800">0.00</span> 秒</p>
+            <p><strong class="text-gray-800">語音產生時間:</strong> <span id="tts-time" class="font-semibold text-amber-800">0.00</span> 秒</p>
           </div>
         </div>
       </div>
@@ -144,11 +152,16 @@
     const originalTextArea = document.getElementById('original-text');
     const translatedTextArea = document.getElementById('translated-text');
     const autoplayToggle = document.getElementById('autoplay-toggle');
+    const sttTimeSpan = document.getElementById('stt-time');
+    const translationTimeSpan = document.getElementById('translation-time');
+    const ttsTimeSpan = document.getElementById('tts-time');
+    const playTranslatedAudioBtn = document.getElementById('play-translated-audio');
 
     // --- State ---
     let isRecording = false;
     let mediaRecorder;
     let audioChunks = [];
+    let currentTranslatedAudioBase64 = null; // 用於儲存當前翻譯的音訊 Base64
 
     // --- Functions ---
     function updateLanguageHeaders() {
@@ -185,19 +198,33 @@
             recordBtn.classList.add('bg-red-500', 'hover:bg-red-600');
             statusIndicator.className = 'status-indicator status-recording';
             statusText.textContent = '錄音中...';
+            playTranslatedAudioBtn.style.display = 'none'; // 錄音時隱藏播放按鈕
         } else if (state === 'processing') {
             recordIcon.classList.remove('fa-stop');
             recordIcon.classList.add('fa-microphone');
             recordBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
             statusIndicator.className = 'status-indicator status-processing';
             statusText.textContent = '處理中...';
+            playTranslatedAudioBtn.style.display = 'none'; // 處理時隱藏播放按鈕
         } else { // idle
             recordIcon.classList.remove('fa-stop');
             recordIcon.classList.add('fa-microphone');
             recordBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
             statusIndicator.className = 'status-indicator status-idle';
             statusText.textContent = '待機中';
+            if (currentTranslatedAudioBase64) {
+                playTranslatedAudioBtn.style.display = ''; // 有音訊時顯示播放按鈕
+            }
         }
+    }
+
+    function playAudio(base64Audio) {
+        if (!base64Audio) {
+            console.warn("沒有音訊資料可播放。");
+            return;
+        }
+        const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
+        audio.play().catch(e => console.error("播放音訊失敗:", e));
     }
 
     async function sendAudioToServer(audioBlob) {
@@ -212,13 +239,20 @@
             const data = await response.json();
             originalTextArea.value = data.original_text;
             translatedTextArea.value = data.translated_text;
-            if (autoplayToggle.checked) {
+
+            sttTimeSpan.textContent = data.stt_time ? data.stt_time.toFixed(2) : '0.00';
+            translationTimeSpan.textContent = data.translation_time ? data.translation_time.toFixed(2) : '0.00';
+            ttsTimeSpan.textContent = data.tts_time ? data.tts_time.toFixed(2) : '0.00';
+
+            currentTranslatedAudioBase64 = data.audio_base64; // 儲存音訊資料
+
+            if (autoplayToggle.checked && currentTranslatedAudioBase64) {
                 console.log("Autoplay is ON. Playing TTS...");
-                // TODO: Add actual TTS call here
+                playAudio(currentTranslatedAudioBase64);
             }
         } catch (error) {
             console.error("Error during translation:", error);
-            alert("翻譯時發生錯誤，請查看主控台以獲取詳細資訊。");
+            alert("翻譯時發生錯誤，請查看主控台以獲取詳細資訊。\n" + error.message);
         } finally {
             updateUIForState('idle');
         }
@@ -260,6 +294,9 @@
     swapLangBtn.addEventListener('click', swapLanguages);
     sourceLangSelect.addEventListener('change', handleLanguageChange);
     targetLangSelect.addEventListener('change', handleLanguageChange);
+    playTranslatedAudioBtn.addEventListener('click', () => {
+        playAudio(currentTranslatedAudioBase64);
+    });
 
     // --- Initial Setup ---
     updateLanguageHeaders();

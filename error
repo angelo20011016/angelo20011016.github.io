@@ -1,0 +1,25 @@
+[Warning] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation (3.4.17, line 64)
+[Info] Successfully preconnected to https://fonts.googleapis.com/
+[Info] Successfully preconnected to https://fonts.gstatic.com/
+[Error] Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR) (translate-audio, line 0)
+[Error] Error during translation: – Error: Server error: INTERNAL SERVER ERROR — translator:211
+Error: Server error: INTERNAL SERVER ERROR — translator:211
+	（匿名函數） (translator:220)
+
+        major_brand     : iso5
+    minor_version   : 1
+    compatible_brands: isomiso5hlsf
+    ISFT            : Lavf61.7.100
+  Stream #0:0(und): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
+      Metadata:
+        creation_time   : 2025-08-05T17:05:18.000000Z
+        handler_name    : Core Media Audio
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc61.19.101 pcm_s16le
+[out#0/wav @ 0x149607e20] video:0KiB audio:179KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.042634%
+size=     179KiB time=00:00:05.71 bitrate= 256.1kbits/s speed= 223x    
+Azure Speech Key: 3WpFg... (truncated)
+Azure Speech Region: eastasia
+Original Text (from STT): 我叫做羅安潔，我來自臺灣村田。
+An error occurred: 404 models/gemini2.5-flash-lite is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+127.0.0.1 - - [06/Aug/2025 01:05:26] "POST /api/translate-audio HTTP/1.1" 500 -
