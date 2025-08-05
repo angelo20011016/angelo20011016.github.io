@@ -114,35 +114,23 @@
     // --- 麥克風權限請求按鈕 ---
     const enableMicBtn = document.getElementById('enable-mic-btn');
     const recordBtn = document.getElementById('record-btn');
+    let audioStream = null; // 用於儲存麥克風串流
+
     enableMicBtn.addEventListener('click', async function() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         alert('您的瀏覽器不支援麥克風功能，請使用最新版 Chrome、Edge 或 Safari。');
         return;
       }
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         enableMicBtn.style.display = 'none';
         recordBtn.style.display = '';
         alert('麥克風權限已啟用，您可以開始錄音。');
       } catch (err) {
+        console.error("無法取得麥克風權限:", err);
         alert('無法取得麥克風權限，請檢查瀏覽器設定並允許本網站存取麥克風。');
       }
     });
-
-    // --- 麥克風權限檢查 ---
-    async function checkMicrophonePermission() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('您的瀏覽器不支援麥克風功能，請使用最新版 Chrome、Edge 或 Safari。');
-        return;
-      }
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        // 權限取得成功，可啟用麥克風功能
-      } catch (err) {
-        alert('無法取得麥克風權限，請檢查瀏覽器網址列左側的麥克風圖示，並允許本網站存取麥克風。\n如仍有問題，請至瀏覽器設定中允許麥克風，或關閉防毒/隱私擋控軟體。');
-      }
-    }
-    document.addEventListener('DOMContentLoaded', checkMicrophonePermission);
 
     // --- DOM Elements ---
     const recordIcon = document.getElementById('record-icon');
@@ -239,7 +227,7 @@
     function startRecording(stream) {
         isRecording = true;
         audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/mp4' });
         mediaRecorder.addEventListener("dataavailable", event => audioChunks.push(event.data));
         mediaRecorder.addEventListener("stop", () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -259,12 +247,11 @@
     // --- Event Listeners ---
     recordBtn.addEventListener('click', async () => {
         if (!isRecording) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                startRecording(stream);
-            } catch (error) {
-                alert("無法取得麥克風權限，請檢查您的瀏覽器設定。");
+            if (!audioStream) {
+                alert("請先點擊「啟用麥克風」按鈕以獲取麥克風權限。");
+                return;
             }
+            startRecording(audioStream);
         } else {
             stopRecording();
         }

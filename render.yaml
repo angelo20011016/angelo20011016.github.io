@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: my-website
+    env: python
+    buildCommand: "./render_build.sh"
+    startCommand: "gunicorn wsgi:app"
+    plan: free
+    buildpacks:
+      - heroku/python
+      - https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git

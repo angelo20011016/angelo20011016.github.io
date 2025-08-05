@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, current_app
 import os
+import subprocess
 import azure.cognitiveservices.speech as speechsdk
 import google.generativeai as genai
 
@@ -14,19 +15,16 @@ def speech_to_text(audio_data, source_lang):
     speech_key = current_app.config['AZURE_SPEECH_KEY']
     speech_region = current_app.config['AZURE_SPEECH_REGION']
     
+    print(f"Azure Speech Key: {speech_key[:5]}... (truncated)")
+    print(f"Azure Speech Region: {speech_region}")
     if not speech_key or not speech_region:
         raise ValueError("Azure Speech credentials are not configured.")
 
     speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
     speech_config.speech_recognition_language = source_lang
-
-    # Create an audio configuration from the in-memory audio data
-    audio_format = speechsdk.audio.AudioStreamFormat(samples_per_second=48000, bits_per_sample=16, channels=1)
-    push_stream = speechsdk.audio.PushAudioInputStream(stream_format=audio_format)
-    push_stream.write(audio_data)
-    push_stream.close()
-
-    audio_config = speechsdk.audio.AudioConfig(stream=push_stream)
+    
+    # Use a WAV file format for recognition.
+    audio_config = speechsdk.audio.AudioConfig(filename=audio_data)
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
     result = speech_recognizer.recognize_once()
@@ -50,7 +48,7 @@ def translate_text_with_gemini(text, source_lang, target_lang):
         raise ValueError("Gemini API key is not configured.")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     # Language name mapping for a better prompt
     lang_map = {
@@ -59,7 +57,7 @@ def translate_text_with_gemini(text, source_lang, target_lang):
         'ja-JP': '日文'
     }
 
-    prompt = f"請將以下內容從「{lang_map.get(source_lang, source_lang)}」翻譯成「{lang_map.get(target_lang, target_lang)}」，請只回傳翻譯後的結果，不要包含任何額外的說明或文字。\n\n原文：\n{text}"
+    prompt = f"請將以下內容從「{lang_map.get(source_lang, source_lang)}」翻譯成「{lang_map.get(target_lang, target_lang)}」，請只回傳翻譯後的結果，不要包含任何額外的說明或文字.\n\n原文:\n{text}"
 
     response = model.generate_content(prompt)
     return response.text.strip()
@@ -77,23 +75,44 @@ def translate_audio():
     if not all([file, source_lang, target_lang]):
         return jsonify({"error": "Missing data"}), 400
 
+    mp4_path = None
+    wav_path = None
     try:
-        audio_data = file.read()
-        
-        # 1. Speech to Text
-        original_text = speech_to_text(audio_data, source_lang)
+        # 1. Save the uploaded mp4 file temporarily
+        mp4_path = "temp_recording.mp4"
+        file.save(mp4_path)
+
+        # 2. Convert mp4 to wav using ffmpeg
+        wav_path = "temp_recording.wav"
+        # This command converts the mp4 to a 16-bit PCM WAV file, which is what Azure SDK expects
+        command = f"ffmpeg -i {mp4_path} -acodec pcm_s16le -ar 16000 -ac 1 {wav_path} -y"
+        subprocess.run(command, shell=True, check=True)
+
+        # 3. Speech to Text from the converted WAV file
+        original_text = speech_to_text(wav_path, source_lang)
+        print(f"Original Text (from STT): {original_text}")
         
         if original_text.startswith('('): # Handle STT errors
             return jsonify({"original_text": original_text, "translated_text": ""})
 
-        # 2. Translate Text
+        # 4. Translate Text
         translated_text = translate_text_with_gemini(original_text, source_lang, target_lang)
+        print(f"Translated Text (from Gemini): {translated_text}")
 
         return jsonify({
             "original_text": original_text,
             "translated_text": translated_text
         })
 
+    except subprocess.CalledProcessError as e:
+        print(f"ffmpeg conversion failed: {e}")
+        return jsonify({"error": "Audio conversion failed."}), 500
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
+    finally:
+        # 5. Clean up temporary files
+        if mp4_path and os.path.exists(mp4_path):
+            os.remove(mp4_path)
+        if wav_path and os.path.exists(wav_path):
+            os.remove(wav_path)
