@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve my_website
+After=network.target
+
+[Service]
+User=pi
+Group=www-data
+WorkingDirectory=/home/pi/my_website
+Environment="PATH=/home/pi/my_website/venv/bin"
+ExecStart=/home/pi/my_website/venv/bin/gunicorn --workers 3 --worker-class eventlet --bind unix:my_website.sock -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
