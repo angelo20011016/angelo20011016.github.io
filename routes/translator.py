@@ -58,10 +58,10 @@ class TranslationSession:
         # Final result for a phrase
         if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
             full_sentence = evt.result.text
+            sentence_id = uuid.uuid4().hex
             print(f"[{self.sid}] RECOGNIZED: {full_sentence}")
-            self.recognized_text += full_sentence + " "
-            socketio.emit('recognized_text', {'text': self.recognized_text.strip()}, room=self.sid)
-            self.translate_and_synthesize(full_sentence)
+            socketio.emit('recognized_sentence', {'id': sentence_id, 'text': full_sentence}, room=self.sid)
+            self.translate_and_synthesize(full_sentence, sentence_id)
         elif evt.result.reason == speechsdk.ResultReason.NoMatch:
             print(f"[{self.sid}] NOMATCH: Speech could not be recognized.")
 
@@ -75,13 +75,12 @@ class TranslationSession:
             print(f"[{self.sid}] Error details: {evt.error_details}")
         self.stop()
 
-    def translate_and_synthesize(self, text_to_translate):
+    def translate_and_synthesize(self, text_to_translate, sentence_id):
         with self.app.app_context():
             try:
                 # 1. Translate Text with Gemini
                 translated = self.translate_text_with_gemini(text_to_translate)
-                self.translated_text += translated + " "
-                socketio.emit('translated_text', {'text': self.translated_text.strip()}, room=self.sid)
+                socketio.emit('translated_sentence', {'id': sentence_id, 'text': translated}, room=self.sid)
 
                 # 2. Synthesize Speech with Azure
                 audio_base64 = self.text_to_speech(translated)
