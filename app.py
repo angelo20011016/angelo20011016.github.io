@@ -1,9 +1,12 @@
 from flask import Flask
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import os
 
 # Load environment variables from .env file FIRST
 load_dotenv()
+
+socketio = SocketIO()
 
 from services.db_service import init_db
 from routes import init_routes
@@ -41,9 +44,10 @@ def create_app(config_class=Config):
     init_mail(app)
     init_db(app)
     init_routes(app)
+    socketio.init_app(app, cors_allowed_origins="*")
     
     return app
 
 if __name__ == '__main__':
     app = create_app(Config)
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True)

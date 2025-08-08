@@ -1,25 +1,105 @@
-[Warning] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation (3.4.17, line 64)
-[Info] Successfully preconnected to https://fonts.googleapis.com/
-[Info] Successfully preconnected to https://fonts.gstatic.com/
-[Error] Failed to load resource: the server responded with a status of 500 (INTERNAL SERVER ERROR) (translate-audio, line 0)
-[Error] Error during translation: – Error: Server error: INTERNAL SERVER ERROR — translator:211
-Error: Server error: INTERNAL SERVER ERROR — translator:211
-	（匿名函數） (translator:220)
-
-        major_brand     : iso5
-    minor_version   : 1
-    compatible_brands: isomiso5hlsf
+-enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, matroska,webm, from 'temp_recording.webm':
+  Metadata:
+    encoder         : Chrome
+  Duration: N/A, start: 0.000000, bitrate: N/A
+  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
+Stream mapping:
+  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, wav, to 'temp_recording.wav':
+  Metadata:
     ISFT            : Lavf61.7.100
-  Stream #0:0(und): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
+  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
       Metadata:
-        creation_time   : 2025-08-05T17:05:18.000000Z
-        handler_name    : Core Media Audio
-        vendor_id       : [0][0][0][0]
         encoder         : Lavc61.19.101 pcm_s16le
-[out#0/wav @ 0x149607e20] video:0KiB audio:179KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.042634%
-size=     179KiB time=00:00:05.71 bitrate= 256.1kbits/s speed= 223x    
+[out#0/wav @ 0x157c04230] video:0KiB audio:4KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 2.031250%
+size=       4KiB time=00:00:00.12 bitrate= 261.2kbits/s speed=58.6x    
+ffmpeg conversion time: 0.15s
 Azure Speech Key: 3WpFg... (truncated)
 Azure Speech Region: eastasia
-Original Text (from STT): 我叫做羅安潔，我來自臺灣村田。
-An error occurred: 404 models/gemini2.5-flash-lite is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
-127.0.0.1 - - [06/Aug/2025 01:05:26] "POST /api/translate-audio HTTP/1.1" 500 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:16] "POST /api/translate-audio HTTP/1.1" 200 -
+ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
+  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_2 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, matroska,webm, from 'temp_recording.webm':
+  Metadata:
+    encoder         : Chrome
+  Duration: N/A, start: 0.000000, bitrate: N/A
+  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
+Stream mapping:
+  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, wav, to 'temp_recording.wav':
+  Metadata:
+    ISFT            : Lavf61.7.100
+  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[out#0/wav @ 0x1537045f0] video:0KiB audio:4KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 2.031250%
+size=       4KiB time=00:00:00.12 bitrate= 261.2kbits/s speed=  71x    
+ffmpeg conversion time: 0.44s
+Azure Speech Key: 3WpFg... (truncated)
+Azure Speech Region: eastasia
+ffmpeg version 7.1.1 Copyright (c) 2000-2025 the FFmpeg developers
+  built with Apple clang version 16.0.0 (clang-1600.0.26.6)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.1.1_2 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, matroska,webm, from 'temp_recording.webm':
+  Metadata:
+    encoder         : Chrome
+  Duration: N/A, start: 0.000000, bitrate: N/A
+  Stream #0:0(eng): Audio: opus, 48000 Hz, mono, fltp (default)
+Stream mapping:
+  Stream #0:0 -> #0:0 (opus (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, wav, to 'temp_recording.wav':
+  Metadata:
+    ISFT            : Lavf61.7.100
+  Stream #0:0(eng): Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s (default)
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[out#0/wav @ 0x137904cd0] video:0KiB audio:4KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 2.031250%
+size=       4KiB time=00:00:00.12 bitrate= 261.2kbits/s speed=26.4x    
+ffmpeg conversion time: 0.48s
+Azure Speech Key: 3WpFg... (truncated)
+Azure Speech Region: eastasia
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:20] "POST /api/translate-audio HTTP/1.1" 200 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:21] "POST /api/translate-audio HTTP/1.1" 200 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:21] "POST /api/translate-audio HTTP/1.1" 200 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:21] "POST /api/translate-audio HTTP/1.1" 200 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:21] "POST /api/translate-audio HTTP/1.1" 200 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:21] "POST /api/translate-audio HTTP/1.1" 200 -
+Original Text (from STT): (無法辨識語音)
+127.0.0.1 - - [07/Aug/2025 00:48:22] "POST /api/translate-audio HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2025 00:48:27] "GET /translator HTTP/1.1" 200 -

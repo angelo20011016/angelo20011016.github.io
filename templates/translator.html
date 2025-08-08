@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <!-- Meta tags and CSS links -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>即時翻譯 | Angelo</title>
@@ -11,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" href="https://img5.uploadhouse.com/fileuploads/31937/319376154887c9e20b063d9725d84b4b64b8a18d.png" type="image/png">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     body { background-color: #FAFAFA; color: #3E2723; font-family: 'Roboto', sans-serif; }
     .navbar { background: rgba(250, 250, 250, 0.9); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
@@ -28,7 +28,6 @@
 </head>
 <body class="pt-20">
 
-  <!-- Navigation Bar -->
   <section class="navbar w-full fixed top-0 left-0 z-50 py-4 px-6">
     <div class="container mx-auto flex items-center justify-between">
       <a href="/about.html" class="text-2xl font-bold">HappyWeCan</a>
@@ -42,11 +41,9 @@
       <button id="mobile-menu-button" class="lg:hidden text-3xl">☰</button>
     </div>
     <div id="mobile-menu" class="hidden w-full bg-white shadow-lg absolute left-0 top-full mt-1 py-4 lg:hidden">
-        <!-- Mobile menu links -->
-    </div>
+        </div>
   </section>
 
-  <!-- Translator Body -->
   <section class="container mx-auto py-16 px-6 max-w-4xl">
     <div class="card p-8">
       <div class="text-center mb-8">
@@ -69,9 +66,8 @@
       </div>
 
       <div class="flex flex-col items-center justify-center space-y-4 mb-8">
-        <button id="enable-mic-btn" class="btn rounded-full w-40 h-12 mb-4">啟用麥克風</button>
-        <button id="record-btn" class="btn-primary rounded-full w-24 h-24 flex items-center justify-center text-4xl shadow-lg transform hover:scale-105 transition-transform" style="display:none;">
-          <i id="record-icon" class="fas fa-microphone"></i>
+        <button id="start-btn" class="btn-primary rounded-full w-40 h-12 flex items-center justify-center text-lg shadow-lg transform hover:scale-105 transition-transform">
+          <i class="fas fa-play mr-2"></i>開始翻譯
         </button>
         <div class="flex items-center space-x-3">
           <div id="status-indicator" class="status-indicator status-idle"></div>
@@ -83,224 +79,217 @@
         <div>
           <h2 id="source-lang-header" class="text-xl font-bold mb-2">原文</h2>
           <div class="bg-gray-50 rounded-lg p-4 h-64">
-            <textarea id="original-text" class="w-full h-full bg-transparent border-none resize-none focus:ring-0" placeholder="按下麥克風開始說話..." readonly></textarea>
+            <textarea id="original-text" class="w-full h-full bg-transparent border-none resize-none focus:ring-0" placeholder="按下開始按鈕並說話..." readonly></textarea>
           </div>
         </div>
         <div>
             <div class="flex items-center justify-between mb-2">
                 <h2 id="target-lang-header" class="text-xl font-bold">翻譯</h2>
-                <div class="flex items-center space-x-2">
-                    <button id="play-translated-audio" class="btn p-2 rounded-full w-10 h-10 flex items-center justify-center" style="display:none;">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <span class="text-sm text-gray-600">自動播放</span>
-                    <label for="autoplay-toggle" class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="autoplay-toggle" class="sr-only peer" checked>
-                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-800"></div>
-                    </label>
-                </div>
             </div>
           <div class="bg-gray-50 rounded-lg p-4 h-64 flex flex-col">
             <textarea id="translated-text" class="w-full h-full bg-transparent border-none resize-none focus:ring-0 flex-grow" placeholder="翻譯結果將顯示在這裡..." readonly></textarea>
-          </div>
-          <div class="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-700">
-            <p class="mb-1"><strong class="text-gray-800">語音轉文字時間:</strong> <span id="stt-time" class="font-semibold text-amber-800">0.00</span> 秒</p>
-            <p class="mb-1"><strong class="text-gray-800">翻譯時間:</strong> <span id="translation-time" class="font-semibold text-amber-800">0.00</span> 秒</p>
-            <p><strong class="text-gray-800">語音產生時間:</strong> <span id="tts-time" class="font-semibold text-amber-800">0.00</span> 秒</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="bg-gray-100 text-gray-800 py-6 mt-12">
-      <!-- Footer content -->
-  </footer>
+      </footer>
 
   <script>
-    // --- 麥克風權限請求按鈕 ---
-    const enableMicBtn = document.getElementById('enable-mic-btn');
-    const recordBtn = document.getElementById('record-btn');
-    let audioStream = null; // 用於儲存麥克風串流
+    document.addEventListener('DOMContentLoaded', () => {
+        const startBtn = document.getElementById('start-btn');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const sourceLangSelect = document.getElementById('source-lang');
+        const targetLangSelect = document.getElementById('target-lang');
+        const swapLangBtn = document.getElementById('swap-lang-btn');
+        const sourceLangHeader = document.getElementById('source-lang-header');
+        const targetLangHeader = document.getElementById('target-lang-header');
+        const originalTextArea = document.getElementById('original-text');
+        const translatedTextArea = document.getElementById('translated-text');
 
-    enableMicBtn.addEventListener('click', async function() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('您的瀏覽器不支援麥克風功能，請使用最新版 Chrome、Edge 或 Safari。');
-        return;
-      }
-      try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        enableMicBtn.style.display = 'none';
-        recordBtn.style.display = '';
-        alert('麥克風權限已啟用，您可以開始錄音。');
-      } catch (err) {
-        console.error("無法取得麥克風權限:", err);
-        alert('無法取得麥克風權限，請檢查瀏覽器設定並允許本網站存取麥克風。');
-      }
-    });
+        let isTranslating = false;
+        let mediaRecorder;
+        let audioContext;
+        let processor;
+        let currentStream;
+        const socket = io();
 
-    // --- DOM Elements ---
-    const recordIcon = document.getElementById('record-icon');
-    const statusIndicator = document.getElementById('status-indicator');
-    const statusText = document.getElementById('status-text');
-    const sourceLangSelect = document.getElementById('source-lang');
-    const targetLangSelect = document.getElementById('target-lang');
-    const swapLangBtn = document.getElementById('swap-lang-btn');
-    const sourceLangHeader = document.getElementById('source-lang-header');
-    const targetLangHeader = document.getElementById('target-lang-header');
-    const originalTextArea = document.getElementById('original-text');
-    const translatedTextArea = document.getElementById('translated-text');
-    const autoplayToggle = document.getElementById('autoplay-toggle');
-    const sttTimeSpan = document.getElementById('stt-time');
-    const translationTimeSpan = document.getElementById('translation-time');
-    const ttsTimeSpan = document.getElementById('tts-time');
-    const playTranslatedAudioBtn = document.getElementById('play-translated-audio');
+        function updateLanguageHeaders() {
+            const sourceLangText = sourceLangSelect.options[sourceLangSelect.selectedIndex].text;
+            const targetLangText = targetLangSelect.options[targetLangSelect.selectedIndex].text;
+            sourceLangHeader.textContent = `原文 (${sourceLangText})`;
+            targetLangHeader.textContent = `翻譯 (${targetLangText})`;
+        }
 
-    // --- State ---
-    let isRecording = false;
-    let mediaRecorder;
-    let audioChunks = [];
-    let currentTranslatedAudioBase64 = null; // 用於儲存當前翻譯的音訊 Base64
+        function swapLanguages() {
+            const sourceValue = sourceLangSelect.value;
+            sourceLangSelect.value = targetLangSelect.value;
+            targetLangSelect.value = sourceValue;
+            updateLanguageHeaders();
+        }
 
-    // --- Functions ---
-    function updateLanguageHeaders() {
-        const sourceLangText = sourceLangSelect.options[sourceLangSelect.selectedIndex].text;
-        const targetLangText = targetLangSelect.options[targetLangSelect.selectedIndex].text;
-        sourceLangHeader.textContent = `原文 (${sourceLangText})`;
-        targetLangHeader.textContent = `翻譯 (${targetLangText})`;
-    }
-
-    function swapLanguages() {
-        const sourceValue = sourceLangSelect.value;
-        sourceLangSelect.value = targetLangSelect.value;
-        targetLangSelect.value = sourceValue;
-        updateLanguageHeaders();
-    }
-    
-    function handleLanguageChange() {
-        if (sourceLangSelect.value === targetLangSelect.value) {
-            // Find the next available language to avoid conflict
-            for (let i = 0; i < targetLangSelect.options.length; i++) {
-                if (targetLangSelect.options[i].value !== sourceLangSelect.value) {
-                    targetLangSelect.value = targetLangSelect.options[i].value;
-                    break;
+        function handleLanguageChange() {
+            if (sourceLangSelect.value === targetLangSelect.value) {
+                for (let i = 0; i < targetLangSelect.options.length; i++) {
+                    if (targetLangSelect.options[i].value !== sourceLangSelect.value) {
+                        targetLangSelect.value = targetLangSelect.options[i].value;
+                        break;
+                    }
                 }
             }
+            updateLanguageHeaders();
         }
-        updateLanguageHeaders();
-    }
 
-    function updateUIForState(state) {
-        if (state === 'recording') {
-            recordIcon.classList.remove('fa-microphone');
-            recordIcon.classList.add('fa-stop');
-            recordBtn.classList.add('bg-red-500', 'hover:bg-red-600');
-            statusIndicator.className = 'status-indicator status-recording';
-            statusText.textContent = '錄音中...';
-            playTranslatedAudioBtn.style.display = 'none'; // 錄音時隱藏播放按鈕
-        } else if (state === 'processing') {
-            recordIcon.classList.remove('fa-stop');
-            recordIcon.classList.add('fa-microphone');
-            recordBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-            statusIndicator.className = 'status-indicator status-processing';
-            statusText.textContent = '處理中...';
-            playTranslatedAudioBtn.style.display = 'none'; // 處理時隱藏播放按鈕
-        } else { // idle
-            recordIcon.classList.remove('fa-stop');
-            recordIcon.classList.add('fa-microphone');
-            recordBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-            statusIndicator.className = 'status-indicator status-idle';
-            statusText.textContent = '待機中';
-            if (currentTranslatedAudioBase64) {
-                playTranslatedAudioBtn.style.display = ''; // 有音訊時顯示播放按鈕
+        function updateUIForState(state, message = '') {
+            if (state === 'translating') {
+                startBtn.innerHTML = '<i class="fas fa-microphone-slash mr-2"></i>停止翻譯';
+                startBtn.classList.remove('btn-primary');
+                startBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                statusIndicator.className = 'status-indicator status-recording';
+                statusText.textContent = message || '即時翻譯中...';
+            } else { // idle
+                startBtn.innerHTML = '<i class="fas fa-play mr-2"></i>開始翻譯';
+                startBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                startBtn.classList.add('btn-primary');
+                statusIndicator.className = 'status-indicator status-idle';
+                statusText.textContent = '待機中';
             }
         }
-    }
 
-    function playAudio(base64Audio) {
-        if (!base64Audio) {
-            console.warn("沒有音訊資料可播放。");
-            return;
+        function playAudio(base64Audio) {
+            if (!base64Audio) return;
+            const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
+            audio.play().catch(e => console.error("Audio playback failed:", e));
         }
-        const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
-        audio.play().catch(e => console.error("播放音訊失敗:", e));
-    }
 
-    async function sendAudioToServer(audioBlob) {
-        const formData = new FormData();
-        formData.append('audio_data', audioBlob, 'recording.webm');
-        formData.append('source_lang', sourceLangSelect.value);
-        formData.append('target_lang', targetLangSelect.value);
+        async function startTranslation() {
+            if (isTranslating) return;
+            isTranslating = true;
 
-        try {
-            const response = await fetch('/api/translate-audio', { method: 'POST', body: formData });
-            if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
-            const data = await response.json();
-            originalTextArea.value = data.original_text;
-            translatedTextArea.value = data.translated_text;
+            originalTextArea.value = '';
+            translatedTextArea.value = '';
+            updateUIForState('translating');
 
-            sttTimeSpan.textContent = data.stt_time ? data.stt_time.toFixed(2) : '0.00';
-            translationTimeSpan.textContent = data.translation_time ? data.translation_time.toFixed(2) : '0.00';
-            ttsTimeSpan.textContent = data.tts_time ? data.tts_time.toFixed(2) : '0.00';
+            socket.emit('start_translation', {
+                source_lang: sourceLangSelect.value,
+                target_lang: targetLangSelect.value
+            });
 
-            currentTranslatedAudioBase64 = data.audio_base64; // 儲存音訊資料
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(currentStream);
+                processor = audioContext.createScriptProcessor(1024, 1, 1);
 
-            if (autoplayToggle.checked && currentTranslatedAudioBase64) {
-                console.log("Autoplay is ON. Playing TTS...");
-                playAudio(currentTranslatedAudioBase64);
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+
+                processor.onaudioprocess = (e) => {
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const downsampled = downsampleBuffer(inputData, 16000);
+                    const pcmData = floatTo16BitPCM(downsampled);
+                    socket.emit('audio_stream', pcmData);
+                };
+
+            } catch (err) {
+                console.error("Error starting audio capture:", err);
+                alert('無法取得麥克風權限，請檢查瀏覽器設定。');
+                stopTranslation();
             }
-        } catch (error) {
-            console.error("Error during translation:", error);
-            alert("翻譯時發生錯誤，請查看主控台以獲取詳細資訊。\n" + error.message);
-        } finally {
+        }
+
+        function stopTranslation() {
+            if (!isTranslating) return;
+            isTranslating = false;
+
+            socket.emit('stop_translation');
+
+            if (processor) {
+                processor.disconnect();
+                processor = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
             updateUIForState('idle');
         }
-    }
 
-    function startRecording(stream) {
-        isRecording = true;
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/mp4' });
-        mediaRecorder.addEventListener("dataavailable", event => audioChunks.push(event.data));
-        mediaRecorder.addEventListener("stop", () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            sendAudioToServer(audioBlob);
-        });
-        mediaRecorder.start();
-        updateUIForState('recording');
-    }
-
-    function stopRecording() {
-        if (mediaRecorder) {
-            mediaRecorder.stop();
-            isRecording = false;
-        }
-    }
-
-    // --- Event Listeners ---
-    recordBtn.addEventListener('click', async () => {
-        if (!isRecording) {
-            if (!audioStream) {
-                alert("請先點擊「啟用麥克風」按鈕以獲取麥克風權限。");
-                return;
+        function floatTo16BitPCM(input) {
+            const output = new Int16Array(input.length);
+            for (let i = 0; i < input.length; i++) {
+                const s = Math.max(-1, Math.min(1, input[i]));
+                output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
             }
-            startRecording(audioStream);
-        } else {
-            stopRecording();
+            return output.buffer;
         }
+
+        function downsampleBuffer(buffer, targetSampleRate) {
+            if (targetSampleRate === audioContext.sampleRate) {
+                return buffer;
+            }
+            const sampleRateRatio = audioContext.sampleRate / targetSampleRate;
+            const newLength = Math.round(buffer.length / sampleRateRatio);
+            const result = new Float32Array(newLength);
+            let offsetResult = 0;
+            let offsetBuffer = 0;
+            while (offsetResult < result.length) {
+                const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+                let accum = 0, count = 0;
+                for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                    accum += buffer[i];
+                    count++;
+                }
+                result[offsetResult] = accum / count;
+                offsetResult++;
+                offsetBuffer = nextOffsetBuffer;
+            }
+            return result;
+        }
+
+        // --- Socket.IO Event Listeners ---
+        socket.on('connect', () => console.log('Socket.IO connected'));
+        socket.on('disconnect', () => console.log('Socket.IO disconnected'));
+        socket.on('recognizing_text', (data) => {
+            originalTextArea.value = data.text;
+        });
+        socket.on('recognized_text', (data) => {
+            originalTextArea.value = data.text;
+        });
+        socket.on('translated_text', (data) => {
+            translatedTextArea.value = data.text;
+        });
+        socket.on('translation_audio', (data) => {
+            playAudio(data.audio);
+        });
+        socket.on('translation_error', (data) => {
+            console.error('Translation Error:', data.error);
+            alert(`發生錯誤: ${data.error}`);
+        });
+
+        // --- DOM Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            if (!isTranslating) {
+                startTranslation();
+            } else {
+                stopTranslation();
+            }
+        });
+
+        swapLangBtn.addEventListener('click', swapLanguages);
+        sourceLangSelect.addEventListener('change', handleLanguageChange);
+        targetLangSelect.addEventListener('change', handleLanguageChange);
+
+        // --- Initial Setup ---
+        updateLanguageHeaders();
     });
-
-    swapLangBtn.addEventListener('click', swapLanguages);
-    sourceLangSelect.addEventListener('change', handleLanguageChange);
-    targetLangSelect.addEventListener('change', handleLanguageChange);
-    playTranslatedAudioBtn.addEventListener('click', () => {
-        playAudio(currentTranslatedAudioBase64);
-    });
-
-    // --- Initial Setup ---
-    updateLanguageHeaders();
-
   </script>
 </body>
 </html>

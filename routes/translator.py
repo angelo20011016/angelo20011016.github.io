@@ -1,174 +1,166 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
-import os
-import subprocess
+from flask import Blueprint, render_template, current_app, request
+from flask_socketio import emit
 import azure.cognitiveservices.speech as speechsdk
 import google.generativeai as genai
-import time
 import base64
+import os
+import uuid
+
+from app import socketio
 
 translator_bp = Blueprint('translator_bp', __name__)
+
+# In-memory session management for translation streams
+# In a production environment, consider a more robust solution like Redis
+user_sessions = {}
+
+class TranslationSession:
+    def __init__(self, source_lang, target_lang, sid, app):
+        self.sid = sid
+        self.source_lang = source_lang
+        self.target_lang = target_lang
+        self.push_stream = speechsdk.audio.PushAudioInputStream()
+        self.recognized_text = ""
+        self.translated_text = ""
+        self.app = app
+
+        # --- Azure Speech-to-Text (STT) Setup ---
+        with self.app.app_context():
+            speech_key = current_app.config['AZURE_SPEECH_KEY']
+            speech_region = current_app.config['AZURE_SPEECH_REGION']
+            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
+            speech_config.speech_recognition_language = source_lang
+            audio_config = speechsdk.audio.AudioConfig(stream=self.push_stream)
+            self.speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+
+        # --- Connect STT events ---
+        self.speech_recognizer.recognizing.connect(self.on_recognizing)
+        self.speech_recognizer.recognized.connect(self.on_recognized)
+        self.speech_recognizer.session_stopped.connect(self.on_session_stopped)
+        self.speech_recognizer.canceled.connect(self.on_canceled)
+
+    def start(self):
+        self.speech_recognizer.start_continuous_recognition()
+        print(f"[{self.sid}] Continuous recognition started.")
+
+    def stop(self):
+        self.speech_recognizer.stop_continuous_recognition()
+        self.push_stream.close()
+        print(f"[{self.sid}] Continuous recognition stopped.")
+
+    def on_recognizing(self, evt):
+        # Intermediate results
+        if evt.result.text:
+            print(f"[{self.sid}] RECOGNIZING: {evt.result.text}")
+            socketio.emit('recognizing_text', {'text': evt.result.text}, room=self.sid)
+
+    def on_recognized(self, evt):
+        # Final result for a phrase
+        if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
+            full_sentence = evt.result.text
+            print(f"[{self.sid}] RECOGNIZED: {full_sentence}")
+            self.recognized_text += full_sentence + " "
+            socketio.emit('recognized_text', {'text': self.recognized_text.strip()}, room=self.sid)
+            self.translate_and_synthesize(full_sentence)
+        elif evt.result.reason == speechsdk.ResultReason.NoMatch:
+            print(f"[{self.sid}] NOMATCH: Speech could not be recognized.")
+
+    def on_session_stopped(self, evt):
+        print(f"[{self.sid}] Session stopped.")
+        self.stop()
+
+    def on_canceled(self, evt):
+        print(f"[{self.sid}] Canceled: {evt.reason}")
+        if evt.reason == speechsdk.CancellationReason.Error:
+            print(f"[{self.sid}] Error details: {evt.error_details}")
+        self.stop()
+
+    def translate_and_synthesize(self, text_to_translate):
+        with self.app.app_context():
+            try:
+                # 1. Translate Text with Gemini
+                translated = self.translate_text_with_gemini(text_to_translate)
+                self.translated_text += translated + " "
+                socketio.emit('translated_text', {'text': self.translated_text.strip()}, room=self.sid)
+
+                # 2. Synthesize Speech with Azure
+                audio_base64 = self.text_to_speech(translated)
+                if audio_base64:
+                    socketio.emit('translation_audio', {'audio': audio_base64}, room=self.sid)
+
+            except Exception as e:
+                print(f"[{self.sid}] Error in translation/synthesis: {e}")
+                socketio.emit('translation_error', {'error': str(e)}, room=self.sid)
+
+    def translate_text_with_gemini(self, text):
+        api_key = current_app.config['GEMINI_API_KEY']
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        lang_map = {'zh-TW': '繁體中文', 'en-US': '英文', 'ja-JP': '日文'}
+        prompt = f"請將以下內容從「{lang_map.get(self.source_lang, self.source_lang)}」翻譯成「{lang_map.get(self.target_lang, self.target_lang)}」，請只回傳翻譯後的結果，不要包含任何額外的說明或文字.\n\n原文:\n{text}"
+        response = model.generate_content(prompt)
+        return response.text.strip()
+
+    def text_to_speech(self, text):
+        speech_key = current_app.config['AZURE_SPEECH_KEY']
+        speech_region = current_app.config['AZURE_SPEECH_REGION']
+        speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
+        
+        voice_map = {
+            'zh-TW': "zh-TW-HsiaoChenNeural",
+            'en-US': "en-US-JennyNeural",
+            'ja-JP': "ja-JP-NanamiNeural"
+        }
+        speech_config.speech_synthesis_voice_name = voice_map.get(self.target_lang, "en-US-JennyNeural")
+        speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Riff16Khz16BitMonoPcm)
+
+        speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
+        result = speech_synthesizer.speak_text_async(text).get()
+
+        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            return base64.b64encode(result.audio_data).decode('utf-8')
+        return None
 
 @translator_bp.route('/translator')
 def translator():
     return render_template('translator.html')
 
-def speech_to_text(audio_data, source_lang):
-    """Uses Azure Speech-to-Text to recognize speech from audio data."""
-    speech_key = current_app.config['AZURE_SPEECH_KEY']
-    speech_region = current_app.config['AZURE_SPEECH_REGION']
+@socketio.on('connect')
+def handle_connect():
+    print(f"Client connected: {request.sid}")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    sid = request.sid
+    if sid in user_sessions:
+        user_sessions[sid].stop()
+        del user_sessions[sid]
+    print(f"Client disconnected: {sid}")
+
+@socketio.on('start_translation')
+def handle_start_translation(data):
+    sid = request.sid
+    if sid in user_sessions:
+        user_sessions[sid].stop()
     
-    print(f"Azure Speech Key: {speech_key[:5]}... (truncated)")
-    print(f"Azure Speech Region: {speech_region}")
-    if not speech_key or not speech_region:
-        raise ValueError("Azure Speech credentials are not configured.")
-
-    speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
-    speech_config.speech_recognition_language = source_lang
+    source_lang = data.get('source_lang', 'en-US')
+    target_lang = data.get('target_lang', 'ja-JP')
     
-    # Use a WAV file format for recognition.
-    audio_config = speechsdk.audio.AudioConfig(filename=audio_data)
-    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+    session = TranslationSession(source_lang, target_lang, sid, current_app._get_current_object())
+    user_sessions[sid] = session
+    session.start()
 
-    result = speech_recognizer.recognize_once()
+@socketio.on('stop_translation')
+def handle_stop_translation():
+    sid = request.sid
+    if sid in user_sessions:
+        user_sessions[sid].stop()
+        del user_sessions[sid]
+        print(f"[{sid}] Translation stopped by client.")
 
-    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-        return result.text
-    elif result.reason == speechsdk.ResultReason.NoMatch:
-        return "(無法辨識語音)"
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = result.cancellation_details
-        print(f"Speech Recognition canceled: {cancellation_details.reason}")
-        if cancellation_details.reason == speechsdk.CancellationReason.Error:
-            print(f"Error details: {cancellation_details.error_details}")
-        return "(語音辨識錯誤)"
-    return "(語音辨識失敗)"
-
-def translate_text_with_gemini(text, source_lang, target_lang):
-    """Uses Google Gemini to translate text."""
-    api_key = current_app.config['GEMINI_API_KEY']
-    if not api_key:
-        raise ValueError("Gemini API key is not configured.")
-
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')
-
-    # Language name mapping for a better prompt
-    lang_map = {
-        'zh-TW': '繁體中文',
-        'en-US': '英文',
-        'ja-JP': '日文'
-    }
-
-    prompt = f"請將以下內容從「{lang_map.get(source_lang, source_lang)}」翻譯成「{lang_map.get(target_lang, target_lang)}」，請只回傳翻譯後的結果，不要包含任何額外的說明或文字.\n\n原文:\n{text}"
-
-    response = model.generate_content(prompt)
-    return response.text.strip()
-
-def text_to_speech(text, target_lang):
-    """Uses Azure Text-to-Speech to synthesize speech from text."""
-    speech_key = current_app.config['AZURE_SPEECH_KEY']
-    speech_region = current_app.config['AZURE_SPEECH_REGION']
-
-    if not speech_key or not speech_region:
-        raise ValueError("Azure Speech credentials are not configured.")
-
-    speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
-    
-    # Map target_lang to a voice name. This is a simplified mapping.
-    # For production, you might want a more robust mapping or allow selection.
-    if target_lang == 'zh-TW':
-        speech_config.speech_synthesis_voice_name = "zh-TW-HsiaoChenNeural"
-    elif target_lang == 'en-US':
-        speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
-    elif target_lang == 'ja-JP':
-        speech_config.speech_synthesis_voice_name = "ja-JP-NanamiNeural"
-    else:
-        speech_config.speech_synthesis_voice_name = "en-US-JennyNeural" # Default
-
-    # Use AudioOutputFormat.Riff16Khz16BitMonoPcm for WAV output
-    speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Riff16Khz16BitMonoPcm)
-
-    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None) # audio_config=None for in-memory stream
-
-    result = speech_synthesizer.speak_text_async(text).get()
-
-    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        audio_data = result.audio_data
-        return base64.b64encode(audio_data).decode('utf-8') # Return Base64 encoded audio
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = result.cancellation_details
-        print(f"Speech synthesis canceled: {cancellation_details.reason}")
-        if cancellation_details.reason == speechsdk.CancellationReason.Error:
-            print(f"Error details: {cancellation_details.error_details}")
-        return None
-    return None
-
-
-@translator_bp.route('/api/translate-audio', methods=['POST'])
-def translate_audio():
-    if 'audio_data' not in request.files:
-        return jsonify({"error": "No audio file part"}), 400
-    
-    file = request.files['audio_data']
-    source_lang = request.form.get('source_lang')
-    target_lang = request.form.get('target_lang')
-
-    if not all([file, source_lang, target_lang]):
-        return jsonify({"error": "Missing data"}), 400
-
-    mp4_path = None
-    wav_path = None
-    try:
-        # 1. Save the uploaded mp4 file temporarily
-        mp4_path = "temp_recording.mp4"
-        file.save(mp4_path)
-
-        # 2. Convert mp4 to wav using ffmpeg
-        wav_path = "temp_recording.wav"
-        # This command converts the mp4 to a 16-bit PCM WAV file, which is what Azure SDK expects
-        start_ffmpeg_time = time.time()
-        command = f"ffmpeg -i {mp4_path} -acodec pcm_s16le -ar 16000 -ac 1 {wav_path} -y"
-        subprocess.run(command, shell=True, check=True)
-        ffmpeg_time = time.time() - start_ffmpeg_time
-
-        # 3. Speech to Text from the converted WAV file
-        start_stt_time = time.time()
-        original_text = speech_to_text(wav_path, source_lang)
-        stt_time = time.time() - start_stt_time
-        print(f"Original Text (from STT): {original_text}")
-        
-        if original_text.startswith('('): # Handle STT errors
-            return jsonify({"original_text": original_text, "translated_text": "", "stt_time": stt_time, "translation_time": 0, "tts_time": 0, "audio_base64": ""})
-
-        # 4. Translate Text
-        start_translation_time = time.time()
-        translated_text = translate_text_with_gemini(original_text, source_lang, target_lang)
-        translation_time = time.time() - start_translation_time
-        print(f"Translated Text (from Gemini): {translated_text}")
-
-        # 5. Text to Speech
-        start_tts_time = time.time()
-        audio_base64 = text_to_speech(translated_text, target_lang)
-        tts_time = time.time() - start_tts_time
-
-        return jsonify({
-            "original_text": original_text,
-            "translated_text": translated_text,
-            "stt_time": stt_time,
-            "translation_time": translation_time,
-            "tts_time": tts_time,
-            "audio_base64": audio_base64
-        })
-
-    except subprocess.CalledProcessError as e:
-        print(f"ffmpeg conversion failed: {e}")
-        return jsonify({"error": "Audio conversion failed."}), 500
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        # 5. Clean up temporary files
-        if mp4_path and os.path.exists(mp4_path):
-            os.remove(mp4_path)
-        if wav_path and os.path.exists(wav_path):
-            os.remove(wav_path)
+@socketio.on('audio_stream')
+def handle_audio_stream(audio_chunk):
+    sid = request.sid
+    if sid in user_sessions:
+        # The audio_chunk is expected to be a binary blob (bytes)
+        user_sessions[sid].push_stream.write(audio_chunk)
