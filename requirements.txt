@@ -1,5 +1,5 @@
 gunicorn==22.0.0
-eventlet
+eventlet>=0.40.0
 Flask-SocketIO==5.3.6
 annotated-types==0.7.0
 appnope==0.1.4
