@@ -4,7 +4,9 @@ from dotenv import load_dotenv
 import os
 
 # Load environment variables from .env file FIRST
-load_dotenv()
+# Construct path to .env file based on this file's location for robustness
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path=dotenv_path)
 
 socketio = SocketIO()
 
