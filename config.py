@@ -7,7 +7,7 @@ class Config:
     TESTING = False
     # Define keys to be loaded from .env
     CONFIG_KEYS = [
-        'MONGODB_URI',
+        'MONGO_URI',
         'ADMIN_USER',
         'ADMIN_PASSWORD',
         'MAIL_USERNAME',

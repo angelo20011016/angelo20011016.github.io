@@ -24,10 +24,6 @@ def create_app(config_class=Config):
     for key in app.config['CONFIG_KEYS']:
         app.config[key] = os.getenv(key)
 
-    # 修正：確保 MONGO_URI 被設定
-    if app.config.get('MONGODB_URI'):
-        app.config['MONGO_URI'] = app.config['MONGODB_URI']
-
     # Special handling for integer ports
     if app.config.get('MAIL_PORT'):
         app.config['MAIL_PORT'] = int(app.config['MAIL_PORT'])
@@ -36,7 +32,7 @@ def create_app(config_class=Config):
 
     # Debugging: Check final config values
     print("--- Final Config Loaded in App ---")
-    print(f"MONGO_URI: {app.config.get('MONGODB_URI')}")
+    print(f"MONGO_URI: {app.config.get('MONGO_URI')}")
     print(f"AZURE_KEY: {bool(app.config.get('AZURE_SPEECH_KEY'))}")
     print("----------------------------------")
 
