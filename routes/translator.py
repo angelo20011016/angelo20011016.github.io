@@ -10,25 +10,30 @@ from app import socketio
 
 translator_bp = Blueprint('translator_bp', __name__)
 
-# In-memory session management for translation streams
-# In a production environment, consider a more robust solution like Redis
+# In-memory session management
 user_sessions = {}
 
 class TranslationSession:
-    def __init__(self, source_lang, target_lang, sid, app):
+    def __init__(self, source_lang, target_lang, sample_rate, sid, app):
         self.sid = sid
         self.source_lang = source_lang
         self.target_lang = target_lang
-        self.push_stream = speechsdk.audio.PushAudioInputStream()
-        self.recognized_text = ""
-        self.translated_text = ""
         self.app = app
+
+        # Use the sample rate provided by the client for higher accuracy.
+        audio_format = speechsdk.audio.AudioStreamFormat(samples_per_second=sample_rate, bits_per_sample=16, channels=1)
+        self.push_stream = speechsdk.audio.PushAudioInputStream(stream_format=audio_format)
 
         # --- Azure Speech-to-Text (STT) Setup ---
         with self.app.app_context():
             speech_key = current_app.config['AZURE_SPEECH_KEY']
             speech_region = current_app.config['AZURE_SPEECH_REGION']
             speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
+            
+            # Make the recognizer more responsive by setting a shorter silence timeout (e.g., 800ms)
+            # The correct property name is SpeechServiceConnection_EndSilenceTimeoutMs
+            speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "800")
+            
             speech_config.speech_recognition_language = source_lang
             audio_config = speechsdk.audio.AudioConfig(stream=self.push_stream)
             self.speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
@@ -44,26 +49,38 @@ class TranslationSession:
         print(f"[{self.sid}] Continuous recognition started.")
 
     def stop(self):
-        self.speech_recognizer.stop_continuous_recognition()
-        self.push_stream.close()
+        if self.speech_recognizer:
+            self.speech_recognizer.stop_continuous_recognition()
+        if self.push_stream:
+            self.push_stream.close()
         print(f"[{self.sid}] Continuous recognition stopped.")
 
     def on_recognizing(self, evt):
-        # Intermediate results
-        if evt.result.text:
-            print(f"[{self.sid}] RECOGNIZING: {evt.result.text}")
-            socketio.emit('recognizing_text', {'text': evt.result.text}, room=self.sid)
+        # This function is also called in a background thread.
+        # It needs the app context to emit Socket.IO events correctly.
+        with self.app.app_context():
+            if evt.result.text:
+                print(f"[{self.sid}] RECOGNIZING: {evt.result.text}")
+                socketio.emit('recognizing_text', {'text': evt.result.text}, room=self.sid)
 
     def on_recognized(self, evt):
-        # Final result for a phrase
-        if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
-            full_sentence = evt.result.text
-            sentence_id = uuid.uuid4().hex
-            print(f"[{self.sid}] RECOGNIZED: {full_sentence}")
-            socketio.emit('recognized_sentence', {'id': sentence_id, 'text': full_sentence}, room=self.sid)
-            self.translate_and_synthesize(full_sentence, sentence_id)
-        elif evt.result.reason == speechsdk.ResultReason.NoMatch:
-            print(f"[{self.sid}] NOMATCH: Speech could not be recognized.")
+        # This function is called in a background thread.
+        # We need the app context to use Flask-SocketIO's emit function.
+        with self.app.app_context():
+            if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
+                full_sentence = evt.result.text
+                if not full_sentence:
+                    return
+                
+                sentence_id = uuid.uuid4().hex
+                print(f"[{self.sid}] RECOGNIZED: {full_sentence}")
+                
+                # Emit event with ID for the current frontend
+                socketio.emit('recognized_sentence', {'id': sentence_id, 'text': full_sentence}, room=self.sid)
+                self.translate_and_synthesize(full_sentence, sentence_id)
+                
+            elif evt.result.reason == speechsdk.ResultReason.NoMatch:
+                print(f"[{self.sid}] NOMATCH: Speech could not be recognized.")
 
     def on_session_stopped(self, evt):
         print(f"[{self.sid}] Session stopped.")
@@ -79,13 +96,22 @@ class TranslationSession:
         with self.app.app_context():
             try:
                 # 1. Translate Text with Gemini
+                print(f"[{self.sid}] Sending to Gemini for translation: '{text_to_translate}'")
                 translated = self.translate_text_with_gemini(text_to_translate)
+                print(f"[{self.sid}] Received from Gemini: '{translated}'")
+                
+                # Emit event with ID for the current frontend
                 socketio.emit('translated_sentence', {'id': sentence_id, 'text': translated}, room=self.sid)
+                print(f"[{self.sid}] Emitted 'translated_sentence' to frontend.")
 
                 # 2. Synthesize Speech with Azure
+                print(f"[{self.sid}] Sending to Azure for synthesis: '{translated}'")
                 audio_base64 = self.text_to_speech(translated)
                 if audio_base64:
                     socketio.emit('translation_audio', {'audio': audio_base64}, room=self.sid)
+                    print(f"[{self.sid}] Emitted 'translation_audio' to frontend.")
+                else:
+                    print(f"[{self.sid}] Azure synthesis returned no audio.")
 
             except Exception as e:
                 print(f"[{self.sid}] Error in translation/synthesis: {e}")
@@ -94,7 +120,7 @@ class TranslationSession:
     def translate_text_with_gemini(self, text):
         api_key = current_app.config['GEMINI_API_KEY']
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         lang_map = {'zh-TW': '繁體中文', 'en-US': '英文', 'ja-JP': '日文'}
         prompt = f"請將以下內容從「{lang_map.get(self.source_lang, self.source_lang)}」翻譯成「{lang_map.get(self.target_lang, self.target_lang)}」，請只回傳翻譯後的結果，不要包含任何額外的說明或文字.\n\n原文:\n{text}"
         response = model.generate_content(prompt)
@@ -144,8 +170,10 @@ def handle_start_translation(data):
     
     source_lang = data.get('source_lang', 'en-US')
     target_lang = data.get('target_lang', 'ja-JP')
+    # Get sample_rate from client, default to 48000 for safety.
+    sample_rate = data.get('sample_rate', 48000)
     
-    session = TranslationSession(source_lang, target_lang, sid, current_app._get_current_object())
+    session = TranslationSession(source_lang, target_lang, sample_rate, sid, current_app._get_current_object())
     user_sessions[sid] = session
     session.start()
 
@@ -161,5 +189,5 @@ def handle_stop_translation():
 def handle_audio_stream(audio_chunk):
     sid = request.sid
     if sid in user_sessions:
-        # The audio_chunk is expected to be a binary blob (bytes)
-        user_sessions[sid].push_stream.write(audio_chunk)
+        if audio_chunk:
+            user_sessions[sid].push_stream.write(audio_chunk)
