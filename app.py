@@ -12,7 +12,6 @@ if os.path.exists(dotenv_path):
 else:
     print("⚠️ WARNING: .env file not found at:", dotenv_path, file=sys.stderr)
 
-
 socketio = SocketIO()
 
 from services.db_service import init_db
