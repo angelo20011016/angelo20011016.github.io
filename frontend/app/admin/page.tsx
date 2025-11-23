@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getAdminProfile } from '@/services/authService';
 
 import PortfolioManager from '@/components/admin/PortfolioManager';
+import BlogManager from '@/components/admin/BlogManager'; // Import BlogManager
 
 interface UserProfile {
   email: string;
@@ -77,10 +78,8 @@ export default function AdminPage() {
         {/* Portfolio Management Section */}
         <PortfolioManager />
 
-         {/* Placeholder for future Blog content */}
-         <div className="mt-8">
-            {/* Blog management section will go here */}
-         </div>
+        {/* Blog Management Section */}
+        <BlogManager />
       </div>
     </div>
   );

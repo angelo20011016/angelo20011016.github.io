@@ -6,13 +6,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw'; // Import rehypeRaw
+
 interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   image?: string;
   description?: string;
-  content?: string; // For rich HTML content
+  content?: string; // Content will now be treated as Markdown
   links?: { label: string; url: string }[];
   tags?: string[];
   date?: string; // For blog posts
@@ -93,12 +97,13 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, title, image
 
             {description && <p className="font-inter text-lg text-gray-300 mb-6">{description}</p>}
 
-            {/* Rich HTML Content */}
+            {/* Markdown Content */}
             {content && (
-                <div
-                className="font-inter text-gray-300 leading-relaxed prose prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: content }}
-                />
+                <div className="font-inter text-gray-300 leading-relaxed prose prose-invert max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {content}
+                    </ReactMarkdown>
+                </div>
             )}
 
             {links && links.length > 0 && (

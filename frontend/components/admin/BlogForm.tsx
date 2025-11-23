@@ -4,50 +4,54 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import SimpleMdeReact from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 
-// Re-using the interface from the Manager component, but it could be moved to a shared types file
-interface PortfolioItem {
+// Interface for Blog Post Item - derived from backend model
+interface BlogPostItem {
     id?: string;
     title: string;
-    description: string;
+    subtitle?: string;
     content?: string;
-    image_url?: string;
-    github_url?: string;
-    demo_url?: string;
+    cover_image?: string;
     tags: string[];
+    is_published: boolean;
+    published_at?: string; // Using string for simplicity in form, convert to Date when sending
+    created_at?: string;
+    updated_at?: string;
 }
 
-interface PortfolioFormProps {
-  itemToEdit?: PortfolioItem | null;
-  onSave: (item: PortfolioItem) => void;
+interface BlogFormProps {
+  itemToEdit?: BlogPostItem | null;
+  onSave: (item: BlogPostItem) => void;
   onCancel: () => void;
 }
 
-export default function PortfolioForm({ itemToEdit, onSave, onCancel }: PortfolioFormProps) {
-  const [item, setItem] = useState<PortfolioItem>({
+export default function BlogForm({ itemToEdit, onSave, onCancel }: BlogFormProps) {
+  const [item, setItem] = useState<BlogPostItem>({
     title: '',
-    description: '',
+    subtitle: '',
     content: '',
-    image_url: '',
-    github_url: '',
-    demo_url: '',
+    cover_image: '',
     tags: [],
+    is_published: false,
   });
   const [tagsInput, setTagsInput] = useState('');
 
   useEffect(() => {
     if (itemToEdit) {
-      setItem(itemToEdit);
+      setItem({
+        ...itemToEdit,
+        // Ensure published_at is a string if it exists for the form, then convert on save
+        published_at: itemToEdit.published_at ? new Date(itemToEdit.published_at).toISOString().split('T')[0] : ''
+      });
       setTagsInput(itemToEdit.tags.join(', '));
     } else {
       // Reset form for creation
       setItem({
         title: '',
-        description: '',
+        subtitle: '',
         content: '',
-        image_url: '',
-        github_url: '',
-        demo_url: '',
+        cover_image: '',
         tags: [],
+        is_published: false,
       });
       setTagsInput('');
     }
@@ -56,6 +60,11 @@ export default function PortfolioForm({ itemToEdit, onSave, onCancel }: Portfoli
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setItem(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setItem(prev => ({ ...prev, [name]: checked }));
   };
 
   const handleMdeChange = useCallback((value: string) => {
@@ -74,15 +83,26 @@ export default function PortfolioForm({ itemToEdit, onSave, onCancel }: Portfoli
     if (dataToSend.id) {
         delete dataToSend.id;
     }
+    // Adjust published_at for backend if needed
+    if (dataToSend.is_published && dataToSend.published_at) {
+        // Convert YYYY-MM-DD to ISO string if it's not already
+        dataToSend.published_at = new Date(dataToSend.published_at).toISOString();
+    } else if (dataToSend.is_published && !dataToSend.published_at) {
+        // If published but no date set, set to now
+        dataToSend.published_at = new Date().toISOString();
+    } else {
+        dataToSend.published_at = undefined; // Ensure not sent if unpublished
+    }
+
     onSave(dataToSend);
   };
 
   const mdeOptions = useMemo(() => {
     return {
-      autofocus: false, // Don't autofocus if multiple fields
+      autofocus: false,
       spellChecker: false,
       toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "guide"],
-      placeholder: "Write your content here...",
+      placeholder: "Write your blog post content here...",
     };
   }, []);
 
@@ -100,19 +120,18 @@ export default function PortfolioForm({ itemToEdit, onSave, onCancel }: Portfoli
           className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
-       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-400">Description</label>
-        <textarea
-          name="description"
-          id="description"
-          value={item.description}
+      <div>
+        <label htmlFor="subtitle" className="block text-sm font-medium text-gray-400">Subtitle</label>
+        <input
+          type="text"
+          name="subtitle"
+          id="subtitle"
+          value={item.subtitle || ''}
           onChange={handleChange}
-          required
-          rows={3}
           className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
-       <div>
+      <div>
         <label htmlFor="content" className="block text-sm font-medium text-gray-400">Content (Markdown)</label>
          <SimpleMdeReact
             value={item.content || ''}
@@ -122,41 +141,17 @@ export default function PortfolioForm({ itemToEdit, onSave, onCancel }: Portfoli
         />
       </div>
       <div>
-        <label htmlFor="image_url" className="block text-sm font-medium text-gray-400">Image URL</label>
+        <label htmlFor="cover_image" className="block text-sm font-medium text-gray-400">Cover Image URL</label>
         <input
           type="url"
-          name="image_url"
-          id="image_url"
-          value={item.image_url || ''}
+          name="cover_image"
+          id="cover_image"
+          value={item.cover_image || ''}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="github_url" className="block text-sm font-medium text-gray-400">GitHub URL</label>
-          <input
-            type="url"
-            name="github_url"
-            id="github_url"
-            value={item.github_url || ''}
-            onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="demo_url" className="block text-sm font-medium text-gray-400">Demo URL</label>
-          <input
-            type="url"
-            name="demo_url"
-            id="demo_url"
-            value={item.demo_url || ''}
-            onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-      </div>
-       <div>
+      <div>
         <label htmlFor="tags" className="block text-sm font-medium text-gray-400">Tags (comma-separated)</label>
         <input
           type="text"
@@ -167,6 +162,30 @@ export default function PortfolioForm({ itemToEdit, onSave, onCancel }: Portfoli
           className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="is_published"
+          id="is_published"
+          checked={item.is_published}
+          onChange={handleCheckboxChange}
+          className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+        />
+        <label htmlFor="is_published" className="text-sm font-medium text-gray-400">Published</label>
+      </div>
+      {item.is_published && (
+        <div>
+          <label htmlFor="published_at" className="block text-sm font-medium text-gray-400">Published At</label>
+          <input
+            type="date"
+            name="published_at"
+            id="published_at"
+            value={item.published_at || ''}
+            onChange={handleChange}
+            className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+      )}
       <div className="flex justify-end space-x-4 pt-4">
         <button
           type="button"
