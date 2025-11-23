@@ -11,6 +11,7 @@ import sys
 # 【關鍵修正】: 從 services.db_service 導入 get_database，而不是 app
 # 這樣就打破了 app -> routes.blog -> app 的循環
 from services.db_service import get_database 
+from services.auth_service import get_current_admin_user # Import the auth dependency
 
 
 
@@ -83,6 +84,18 @@ async def get_all_blog_posts(
         print(f"Error fetching blog posts list: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="無法獲取文章列表")
 
+@router.get("/blog/all", response_model=List[BlogPostItem])
+async def get_all_blog_posts_admin(db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
+    """
+    Admin-only route to get all posts, including unpublished ones.
+    """
+    try:
+        posts = await db.blog_posts.find().sort("created_at", -1).to_list(1000)
+        return posts
+    except Exception as e:
+        print(f"Error fetching all blog posts for admin: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail="無法獲取所有文章列表")
+
 @router.get("/blog/{post_id}", response_model=BlogPostItem)
 async def get_blog_post_by_id(post_id: str, db: AsyncIOMotorClient = Depends(get_database)):
     try:
@@ -94,7 +107,9 @@ async def get_blog_post_by_id(post_id: str, db: AsyncIOMotorClient = Depends(get
         if not post:
             raise HTTPException(status_code=404, detail="找不到該文章")
         
-        if not post.get('is_published', False): # For public API, only return published posts
+        # Public route should not return unpublished posts unless specifically asked by an admin
+        # (which would be a different endpoint)
+        if not post.get('is_published', False):
              raise HTTPException(status_code=404, detail="找不到該文章或未發布")
         
         return post
@@ -104,14 +119,9 @@ async def get_blog_post_by_id(post_id: str, db: AsyncIOMotorClient = Depends(get
         print(f"Error fetching single blog post: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="無法獲取文章詳情")
 
-# Admin routes (POST, PUT, DELETE) are kept as stubs for now.
-# They would require proper authentication dependencies.
+# Admin routes (POST, PUT, DELETE) are now protected
 @router.post("/blog", response_model=BlogPostItem, status_code=status.HTTP_201_CREATED)
-async def create_blog_post(item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database)):
-    # Placeholder for admin authentication
-    # if not await is_admin_logged_in(session_id):
-    #     raise HTTPException(status_code=401, detail="未授權")
-
+async def create_blog_post(item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     if item.id:
         raise HTTPException(status_code=400, detail="Do not provide _id for new item creation")
 
@@ -133,11 +143,7 @@ async def create_blog_post(item: BlogPostItem, db: AsyncIOMotorClient = Depends(
         raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
 
 @router.put("/blog/{post_id}", response_model=BlogPostItem)
-async def update_blog_post(post_id: str, item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database)):
-    # Placeholder for admin authentication
-    # if not await is_admin_logged_in(session_id):
-    #     raise HTTPException(status_code=401, detail="未授權")
-
+async def update_blog_post(post_id: str, item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     try:
         if not ObjectId.is_valid(post_id):
             raise HTTPException(status_code=400, detail="無效的文章 ID 格式")
@@ -148,6 +154,15 @@ async def update_blog_post(post_id: str, item: BlogPostItem, db: AsyncIOMotorCli
         update_data.pop("_id", None)
         update_data.pop("created_at", None) # Do not update created_at
         update_data["updated_at"] = datetime.now(pytz.utc) # Set updated_at
+
+        # Logic to handle publishing
+        existing_post = await db.blog_posts.find_one({"_id": ObjectId(post_id)})
+        if not existing_post:
+            raise HTTPException(status_code=404, detail="找不到該文章")
+
+        is_being_published = not existing_post.get('is_published') and update_data.get('is_published')
+        if is_being_published:
+            update_data['published_at'] = datetime.now(pytz.utc)
 
         result = await db.blog_posts.update_one(
             {"_id": ObjectId(post_id)},
@@ -165,11 +180,7 @@ async def update_blog_post(post_id: str, item: BlogPostItem, db: AsyncIOMotorCli
         raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
 
 @router.delete("/blog/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_blog_post(post_id: str, db: AsyncIOMotorClient = Depends(get_database)):
-    # Placeholder for admin authentication
-    # if not await is_admin_logged_in(session_id):
-    #     raise HTTPException(status_code=401, detail="未授權")
-
+async def delete_blog_post(post_id: str, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     try:
         if not ObjectId.is_valid(post_id):
             raise HTTPException(status_code=400, detail="無效的文章 ID 格式")

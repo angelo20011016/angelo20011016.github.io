@@ -5,8 +5,8 @@ import "./globals.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect } from "react";
-import SideNavigation from "../src/components/layout/SideNavigation";
-import Footer from "../src/components/layout/Footer"; // Import Footer component
+import SideNavigation from "@/components/layout/SideNavigation";
+import Footer from "@/components/layout/Footer"; // Import Footer component
 
 gsap.registerPlugin(ScrollTrigger);
 

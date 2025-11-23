@@ -8,6 +8,7 @@ import sys
 
 from models.objectid_model import PydanticObjectId # Import PydanticObjectId
 from services.db_service import get_database # Import the actual dependency generator
+from services.auth_service import get_current_admin_user # Import the auth dependency
 
 #     from app import get_database
 #     return await get_database()
@@ -74,14 +75,9 @@ async def get_portfolio_by_id(portfolio_id: str, db: AsyncIOMotorClient = Depend
         print(f"Error fetching single portfolio item: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="無法獲取作品詳情")
 
-# Admin routes (POST, PUT, DELETE) are kept as stubs for now.
-# They would require proper authentication dependencies.
+# Admin routes (POST, PUT, DELETE) are now protected.
 @router.post("/portfolio", response_model=PortfolioItem, status_code=status.HTTP_201_CREATED)
-async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database)):
-    # Placeholder for admin authentication
-    # if not await is_admin_logged_in(session_id):
-    #     raise HTTPException(status_code=401, detail="未授權")
-    
+async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     # item.created_at is already set by default_factory
     if item.id:
         # PydanticObjectId should handle the conversion to ObjectId if provided
@@ -107,11 +103,7 @@ async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends
         raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
 
 @router.put("/portfolio/{portfolio_id}", response_model=PortfolioItem)
-async def update_portfolio(portfolio_id: str, item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database)):
-    # Placeholder for admin authentication
-    # if not await is_admin_logged_in(session_id):
-    #     raise HTTPException(status_code=401, detail="未授權")
-
+async def update_portfolio(portfolio_id: str, item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     try:
         if not ObjectId.is_valid(portfolio_id):
             raise HTTPException(status_code=400, detail="無效的作品 ID 格式")
@@ -143,11 +135,7 @@ async def update_portfolio(portfolio_id: str, item: PortfolioItem, db: AsyncIOMo
         raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
 
 @router.delete("/portfolio/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_portfolio(portfolio_id: str, db: AsyncIOMotorClient = Depends(get_database)):
-    # Placeholder for admin authentication
-    # if not await is_admin_logged_in(session_id):
-    #     raise HTTPException(status_code=401, detail="未授權")
-
+async def delete_portfolio(portfolio_id: str, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     try:
         if not ObjectId.is_valid(portfolio_id):
             raise HTTPException(status_code=400, detail="無效的作品 ID 格式")

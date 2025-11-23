@@ -70,8 +70,8 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, title, image
             {/* Header/Image */}
             {image && (
             <div className="relative w-full h-64 md:h-80 bg-cover bg-center rounded-t-lg overflow-hidden flex-shrink-0">
-                <Image src={image} alt={title} fill style={{objectFit:"cover"}} quality={90} />
                 <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                <Image src={image} alt={title} fill style={{objectFit:"cover"}} quality={90} />
             </div>
             )}
 

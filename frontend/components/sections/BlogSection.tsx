@@ -29,7 +29,7 @@ const BlogSection: React.FC = () => {
   useEffect(() => {
     const fetchBlogPosts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/blog?publishedOnly=true'); // Fetch only published posts
+        const response = await fetch('http://localhost:8000/api/blog?publishedOnly=true'); // Fetch only published posts
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

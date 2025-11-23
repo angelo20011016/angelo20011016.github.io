@@ -10,7 +10,7 @@ interface PortfolioItem {
   id: string;
   title: string;
   description: string;
-  imageUrl: string;
+  image_url: string;
   content: string;
   links?: { label: string; url: string }[];
   tags?: string[];
@@ -27,7 +27,7 @@ const PortfolioCarousel: React.FC = () => {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/portfolio');
+        const response = await fetch('http://localhost:8000/api/portfolio');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -47,7 +47,7 @@ const PortfolioCarousel: React.FC = () => {
     type: 'loop',
     perPage: 1,
     autoplay: true,
-    interval: 5000,
+    interval: 8000,
     pauseOnHover: true,
     height: 'min(70vh, 700px)',
     arrows: true,
@@ -91,11 +91,11 @@ const PortfolioCarousel: React.FC = () => {
         {portfolioItems.map((item, index) => (
           <SplideSlide key={item.id || index}>
             <div
-              className="relative w-full h-full bg-cover bg-center flex items-center justify-center p-8 md:p-16 text-white"
-              style={{ backgroundImage: `url(${item.imageUrl})` }}
+              className="relative w-full h-full bg-cover bg-center"
+              style={{ backgroundImage: `url(${item.image_url})` }}
             >
-              <div className="absolute inset-0 bg-black bg-opacity-60"></div>
-              <div className="relative z-10 text-center max-w-3xl">
+              <div className="absolute inset-0 bg-black" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
+              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-8 text-white">
                 <h3 className="font-mono text-4xl md:text-6xl font-bold mb-4 uppercase text-shadow-lg">
                   {item.title}
                 </h3>
@@ -120,7 +120,7 @@ const PortfolioCarousel: React.FC = () => {
           isOpen={isModalOpen}
           onClose={closeModal}
           title={selectedItem.title}
-          image={selectedItem.imageUrl}
+          image={selectedItem.image_url}
           description={selectedItem.description}
           content={selectedItem.content}
           links={selectedItem.links}

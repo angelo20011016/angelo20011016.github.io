@@ -1,9 +1,9 @@
 "use client";
 
-import HeroSection from "../src/components/sections/HeroSection";
-import PortfolioSection from "../src/components/sections/PortfolioSection";
-import BlogSection from "../src/components/sections/BlogSection";
-import ContactSection from "../src/components/sections/ContactSection";
+import HeroSection from "@/components/sections/HeroSection";
+import PortfolioSection from "@/components/sections/PortfolioSection";
+import BlogSection from "@/components/sections/BlogSection";
+import ContactSection from "@/components/sections/ContactSection";
 
 export default function Home() {
   return (

@@ -58,14 +58,16 @@ from routes.portfolio import router as portfolio_router
 from routes.blog import router as blog_router
 from routes.contact import router as contact_router
 from routes.user import router as user_router # Assuming user routes will also be migrated
+from routes.admin import router as admin_router
 
 app.include_router(portfolio_router, prefix="/api")
 app.include_router(blog_router, prefix="/api")
 app.include_router(contact_router, prefix="/api")
 app.include_router(user_router, prefix="/api") # Include user router
+app.include_router(admin_router, prefix="/api") # Include admin router
 
 
 if __name__ == '__main__':
     # Use Uvicorn to run the FastAPI app
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

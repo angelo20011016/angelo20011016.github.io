@@ -1,79 +1,46 @@
-from flask import Blueprint, render_template, request, session, redirect, jsonify
-import os
-from bson.objectid import ObjectId
-from datetime import datetime
-from services.db_service import mongo, format_documents
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from datetime import timedelta
 
-admin_bp = Blueprint('admin', __name__)
+from services.auth_service import create_access_token, get_current_admin_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from models.user import UserModel
+from services.db_service import get_database
 
-@admin_bp.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        # 檢查憑證
-        if username == os.getenv('ADMIN_USER') and password == os.getenv('ADMIN_PASSWORD'):
-            session['admin_logged_in'] = True
-            return redirect('/admin')
-        else:
-            return render_template('admin_login.html', error='用戶名或密碼錯誤')
-            
-    return render_template('admin_login.html')
+router = APIRouter()
 
-@admin_bp.route('/admin')
-def admin_page():
-    if not session.get('admin_logged_in'):
-        return redirect('/admin/login')
-    return render_template('admin.html')
+@router.post("/admin/token", summary="Admin Login")
+async def login_for_access_token(db = Depends(get_database), form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Provides a JWT token for authenticated admin users.
+    Login with email as username.
+    """
+    user_model = UserModel(db)
+    # The 'username' from the form is the email
+    is_valid = await user_model.verify_password(email=form_data.username, password=form_data.password)
 
-@admin_bp.route('/admin/logout')
-def admin_logout():
-    session.pop('admin_logged_in', None)
-    return redirect('/admin/login')
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    await user_model.update_last_login(form_data.username)
 
-@admin_bp.route('/api/recent-activities', methods=['GET'])
-def get_recent_activities():
-    """獲取最近活動"""
-    if not session.get('admin_logged_in'):
-        return jsonify({'error': '未授權訪問'}), 403
-        
-    try:
-        # 創建一個活動列表
-        activities = []
-        
-        # 獲取最近的作品
-        portfolios = list(mongo.db.portfolio.find().sort([('created_at', -1)]).limit(3))
-        for portfolio in portfolios:
-            activities.append({
-                'icon': 'fa-folder-open',
-                'message': f"新增作品: {portfolio.get('title', '未命名')}",
-                'time': portfolio.get('created_at').strftime('%Y-%m-%d') if portfolio.get('created_at') else '未知'
-            })
-        
-        # 獲取最近的訂閱者
-        subscribers = list(mongo.db.newsletter_subscribers.find().sort([('subscribed_at', -1)]).limit(3))
-        for subscriber in subscribers:
-            activities.append({
-                'icon': 'fa-envelope',
-                'message': f"新訂閱者: {subscriber.get('email', '未知')}",
-                'time': subscriber.get('subscribed_at').strftime('%Y-%m-%d') if subscriber.get('subscribed_at') else '未知'
-            })
-        
-        # 獲取最近的聯絡訊息
-        contacts = list(mongo.db.contacts.find().sort([('created_at', -1)]).limit(3))
-        for contact in contacts:
-            activities.append({
-                'icon': 'fa-comment',
-                'message': f"收到訊息: 來自 {contact.get('name', '未知')}",
-                'time': contact.get('created_at').strftime('%Y-%m-%d') if contact.get('created_at') else '未知'
-            })
-        
-        # 按時間排序
-        activities = sorted(activities, key=lambda x: x.get('time', ''), reverse=True)
-        
-        return jsonify(activities[:5])  # 只返回最近5條
-        
-    except Exception as e:
-        print(f"獲取最近活動失敗: {str(e)}")
-        return jsonify([]), 500
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": form_data.username}, expires_delta=access_token_expires
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/admin/me", summary="Get Current Admin User")
+async def read_users_me(current_user: dict = Depends(get_current_admin_user)):
+    """
+    Returns the current authenticated admin user's information.
+    A test endpoint to verify authentication.
+    """
+    # Note: It's better to return a Pydantic model of the user to avoid leaking sensitive data
+    return {"email": current_user.get("email"), "nickname": current_user.get("nickname")}
+
