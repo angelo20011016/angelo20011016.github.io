@@ -59,12 +59,14 @@ from routes.blog import router as blog_router
 from routes.contact import router as contact_router
 from routes.user import router as user_router # Assuming user routes will also be migrated
 from routes.admin import router as admin_router
+from routes.static_content import router as static_content_router
 
 app.include_router(portfolio_router, prefix="/api")
 app.include_router(blog_router, prefix="/api")
 app.include_router(contact_router, prefix="/api")
 app.include_router(user_router, prefix="/api") # Include user router
 app.include_router(admin_router, prefix="/api") # Include admin router
+app.include_router(static_content_router, prefix="/api")
 
 
 if __name__ == '__main__':

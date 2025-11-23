@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { Link as ScrollLink } from 'react-scroll';
 import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import SkillCloud from './SkillCloud';
 import VisionAndNewsletter from './VisionAndNewsletter';
 import HobbiesSection from './HobbiesSection'; // Import HobbiesSection component
+import { HeroSettings, getHeroSettings } from '../../services/staticContentService';
 
 const HeroSection: React.FC = () => {
+  const [settings, setSettings] = useState<HeroSettings | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const sectionRef = useRef(null);
   const photoRef = useRef(null);
   const titleRef = useRef(null);
@@ -49,6 +56,21 @@ const HeroSection: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLoading(true);
+        const data = await getHeroSettings();
+        setSettings(data);
+      } catch (err) {
+        setError("Failed to load hero settings.");
+        console.error("Failed to load hero settings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+
     if (sectionRef.current) {
       // Animation for the personal photo
       gsap.fromTo(photoRef.current,
@@ -109,11 +131,23 @@ const HeroSection: React.FC = () => {
     }
   }, []);
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-black text-white">Loading Hero Section...</div>;
+  }
+
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center bg-black text-red-500">Error: {error}</div>;
+  }
+
+  if (!settings) {
+    return <div className="min-h-screen flex items-center justify-center bg-black text-gray-500">No Hero settings found.</div>;
+  }
+
   return (
     <section id="hero" ref={sectionRef} className="min-h-screen w-full flex flex-col items-center justify-center p-8 bg-black text-white text-center relative z-10 overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://images.unsplash.com/photo-1531297484001-80022131f5a1"
+          src={settings.hero_background_image_url || "https://images.unsplash.com/photo-1531297484001-80022131f5a1"}
           alt="Abstract Background"
           fill
           className="object-cover opacity-10" // Adjust opacity as needed for subtlety
@@ -125,7 +159,7 @@ const HeroSection: React.FC = () => {
         {/* Personal Photo */}
         <div ref={photoRef} className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden mb-8 border-4 border-white shadow-lg relative">
           <Image
-            src="https://img8.uploadhouse.com/fileuploads/31936/31936778eb4b70130f3289122781a71f94414143.jpg"
+            src={settings.hero_personal_photo_url || "https://img8.uploadhouse.com/fileuploads/31936/31936778eb4b70130f3289122781a71f94414143.jpg"}
             alt="Angelo照片"
             fill
             className="object-cover"
@@ -140,17 +174,14 @@ const HeroSection: React.FC = () => {
           onMouseEnter={handleMouseEnterTitle}
           onMouseLeave={handleMouseLeaveTitle}
         >
-          {splitText("Angelo")}
+          {splitText(settings.hero_main_title)}
           <br />
-          {splitText("Creative Developer")}
+          {splitText(settings.hero_subtitle)}
         </h1>
-        <div ref={bioRef} className="text-lg md:text-xl text-gray-300 font-inter leading-relaxed mb-12">
-          <p className="mb-4">
-            大學時期的我，在課餘時間擔任過吉他社團老師、咖啡師、以及軟體新創業務。除了喜歡把雜亂的知識收斂成系統後與他人分享，更在實習過程中收穫了很好的簡報/提案/思考能力。而拜於學校重視數據驅動的趨勢，我也培養了不錯的數理能力，也從中發現了用程式解決現實問題的樂趣，因此點燃了我對技術的熱情。除了本科的數理統計/統計分析，更跨系修習了許多程式相關的課程，以展現學習積極/以及學習能力，詳情可以參考<a href="https://drive.google.com/file/d/1rKGg4z_ZxPkvfL82YNfv-tEenXQ0Zn7b/view?usp=share_link" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">我的成績單</a>，也在畢業前與畢業後分別並參與了ccClub/職訓局這兩個非常扎實的coding bootcamp。
-          </p>
-          <p>
-            積極求職的現在，深知轉職軟體工程是一條艱辛、需要持續學習的路程，我積極探索各種技術領域，持續打造能夠真正解決問題的作品集。
-          </p>
+        <div ref={bioRef} className="text-lg md:text-xl text-gray-300 font-inter leading-relaxed mb-12 prose prose-invert">
+          <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+            {settings.hero_bio_content}
+          </ReactMarkdown>
         </div>
         <div ref={buttonsRef} className="flex flex-col sm:flex-row justify-center gap-6 mb-20">
           <ScrollLink
@@ -159,7 +190,7 @@ const HeroSection: React.FC = () => {
             duration={800}
             className="cursor-pointer px-8 py-4 bg-white text-black font-bold uppercase tracking-wider text-lg rounded-full hover:bg-gray-200 transition-colors duration-300 shadow-lg"
           >
-            查看作品集
+            {settings.hero_button_1_label}
           </ScrollLink>
           <ScrollLink
             to="contact"
@@ -167,7 +198,7 @@ const HeroSection: React.FC = () => {
             duration={800}
             className="cursor-pointer px-8 py-4 border-2 border-white text-white font-bold uppercase tracking-wider text-lg rounded-full hover:bg-white hover:text-black transition-colors duration-300 shadow-lg"
           >
-            與我聯繫
+            {settings.hero_button_2_label}
           </ScrollLink>
         </div>
 
@@ -191,7 +222,3 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
-
-
-
-

@@ -6,6 +6,7 @@ import { getAdminProfile } from '@/services/authService';
 
 import PortfolioManager from '@/components/admin/PortfolioManager';
 import BlogManager from '@/components/admin/BlogManager'; // Import BlogManager
+import HeroContentForm from '@/components/admin/HeroContentForm'; // Import HeroContentForm
 
 interface UserProfile {
   email: string;
@@ -80,6 +81,9 @@ export default function AdminPage() {
 
         {/* Blog Management Section */}
         <BlogManager />
+
+        {/* Hero Section Content Management */}
+        <HeroContentForm />
       </div>
     </div>
   );
