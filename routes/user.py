@@ -1,80 +1,64 @@
-from flask import Blueprint, request, jsonify, session
-from services.db_service import mongo
-from models.user import UserModel
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional, Any
+from bson.objectid import ObjectId
 from datetime import datetime, timedelta
+from pydantic import BaseModel, Field, EmailStr
+from typing_extensions import Annotated
+from motor.motor_asyncio import AsyncIOMotorClient
 import secrets
-from services.mail_service import send_reset_email
+from pydantic.functional_validators import BeforeValidator
+from services.db_service import get_database # Corrected import for the dependency
 
-user_bp = Blueprint('user', __name__)
+router = APIRouter()
 
-@user_bp.route('/api/register', methods=['POST'])
-def register():
-    user_model = UserModel(mongo.db)
-    data = request.json
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
-    nickname = data.get('nickname', '')
-    if not email or not password:
-        return jsonify({'success': False, 'message': '請填寫 email 和密碼'}), 400
-    user, err = user_model.create_user(email, password, nickname)
-    if err:
-        return jsonify({'success': False, 'message': err}), 400
-    return jsonify({'success': True, 'message': '註冊成功', 'user_id': str(user['_id'])})
+# Pydantic V2 compatible ObjectId handling
+def validate_object_id(v: Any) -> ObjectId:
+    if isinstance(v, ObjectId):
+        return v
+    if isinstance(v, str) and ObjectId.is_valid(v):
+        return ObjectId(v)
+    raise ValueError("Invalid ObjectId")
 
-@user_bp.route('/api/login', methods=['POST'])
-def login():
-    user_model = UserModel(mongo.db)
-    data = request.json
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
-    if not email or not password:
-        return jsonify({'success': False, 'message': '請填寫 email 和密碼'}), 400
-    if not user_model.verify_password(email, password):
-        return jsonify({'success': False, 'message': '帳號或密碼錯誤'}), 401
-    user_model.update_last_login(email)
-    session['user_email'] = email
-    return jsonify({'success': True, 'message': '登入成功'})
+PydanticObjectId = Annotated[ObjectId, BeforeValidator(validate_object_id)]
 
-@user_bp.route('/api/logout', methods=['POST'])
-def logout():
-    session.pop('user_email', None)
-    return jsonify({'success': True, 'message': '已登出'})
+# Pydantic models for user (stubs for now)
+class UserRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    nickname: Optional[str] = None
 
-@user_bp.route('/api/request_reset_password', methods=['POST'])
-def request_reset_password():
-    user_model = UserModel(mongo.db)
-    data = request.json
-    email = data.get('email', '').strip().lower()
-    user = user_model.find_by_email(email)
-    if not user:
-        return jsonify({'success': False, 'message': '查無此帳號'}), 404
-    # 產生 token 與過期時間
-    token = secrets.token_urlsafe(32)
-    expire_time = datetime.utcnow() + timedelta(hours=1)
-    user_model.set_reset_token(email, token, expire_time)
-    # 構建重設密碼連結
-    reset_link = f"https://你的網域/reset_password?token={token}"
-    try:
-        send_reset_email(email, reset_link)
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'寄信失敗: {str(e)}'}), 500
-    return jsonify({'success': True, 'message': '重設密碼連結已寄出，請檢查您的信箱'})
+class UserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
 
-@user_bp.route('/api/reset_password', methods=['POST'])
-def reset_password():
-    user_model = UserModel(mongo.db)
-    data = request.json
-    token = data.get('token', '')
-    new_password = data.get('new_password', '')
-    if not token or not new_password:
-        return jsonify({'success': False, 'message': '缺少 token 或新密碼'}), 400
-    user = user_model.get_user_by_reset_token(token)
-    if not user:
-        return jsonify({'success': False, 'message': '無效的 token'}), 400
-    # 檢查 token 是否過期
-    expire_time = user.get('reset_token_expire')
-    if not expire_time or datetime.utcnow() > expire_time:
-        return jsonify({'success': False, 'message': 'token 已過期'}), 400
-    user_model.update_password(user['email'], new_password)
-    user_model.clear_reset_token(user['email'])
-    return jsonify({'success': True, 'message': '密碼已重設，請重新登入'})
+class RequestResetPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def register(user_data: UserRegisterRequest, db: AsyncIOMotorClient = Depends(get_database)):
+    # TODO: Implement user registration logic with FastAPI and async operations
+    raise HTTPException(status_code=501, detail="註冊功能尚未實作")
+
+@router.post("/login", response_model=dict)
+async def login(user_data: UserLoginRequest, db: AsyncIOMotorClient = Depends(get_database)):
+    # TODO: Implement user login logic with FastAPI and async operations
+    raise HTTPException(status_code=501, detail="登入功能尚未實作")
+
+@router.post("/logout", response_model=dict)
+async def logout():
+    # TODO: Implement user logout logic with FastAPI
+    raise HTTPException(status_code=501, detail="登出功能尚未實作")
+
+@router.post("/request_reset_password", response_model=dict)
+async def request_reset_password(data: RequestResetPasswordRequest, db: AsyncIOMotorClient = Depends(get_database)):
+    # TODO: Implement request reset password logic with FastAPI
+    raise HTTPException(status_code=501, detail="重設密碼請求功能尚未實作")
+
+@router.post("/reset_password", response_model=dict)
+async def reset_password(data: ResetPasswordRequest, db: AsyncIOMotorClient = Depends(get_database)):
+    # TODO: Implement reset password logic with FastAPI
+    raise HTTPException(status_code=501, detail="重設密碼功能尚未實作")

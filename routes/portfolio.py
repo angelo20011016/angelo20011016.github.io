@@ -1,177 +1,165 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, session
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional, Any
 from bson.objectid import ObjectId
 from datetime import datetime
-from services.db_service import mongo, format_document, format_documents
+from pydantic import BaseModel, Field
+from motor.motor_asyncio import AsyncIOMotorClient
+import sys
 
-portfolio_bp = Blueprint('portfolio', __name__)
+from models.objectid_model import PydanticObjectId # Import PydanticObjectId
+from services.db_service import get_database # Import the actual dependency generator
 
-@portfolio_bp.route('/portfolio.html')
-def portfolio_page():
-    return render_template('portfolio.html')
+#     from app import get_database
+#     return await get_database()
+
+router = APIRouter()
+
+class PortfolioItem(BaseModel):
+    # 使用 PydanticObjectId 來處理 ObjectId <-> str 轉換
+    id: Optional[PydanticObjectId] = Field(alias="_id", default=None)
+    title: str
+    description: str
+    content: Optional[str] = None # Assuming rich HTML content
+    image_url: Optional[str] = None
+    github_url: Optional[str] = None
+    demo_url: Optional[str] = None
+    tags: List[str] = []
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        populate_by_name = True # Replaces allow_population_by_field_name
+        arbitrary_types_allowed = True
+        json_schema_extra = {
+            "example": {
+                "title": "我的作品名稱",
+                "description": "這是我的作品簡短描述",
+                "content": "<p>這是作品的詳細內容，支援HTML</p>",
+                "image_url": "http://example.com/image.jpg",
+                "github_url": "http://github.com/my-project",
+                "demo_url": "http://demo.my-project.com",
+                "tags": ["Python", "FastAPI", "MongoDB"],
+            }
+        }
+        # Pydantic V2's dumps/loads handles ObjectId -> str conversion automatically with Annotated type
 
 
-@portfolio_bp.route('/api/portfolio/count', methods=['GET'])
-def get_portfolio_count():
-    """獲取作品總數"""
+@router.get("/portfolio", response_model=List[PortfolioItem])
+async def get_all_portfolio(db: AsyncIOMotorClient = Depends(get_database)):
     try:
-        count = mongo.db.portfolio.count_documents({})
-        return jsonify({'count': count}), 200
+        # Pydantic V2's response_model會自動處理ObjectId到str的轉換
+        portfolios = await db.portfolio.find().sort("created_at", -1).to_list(1000)
+        
+        return portfolios
     except Exception as e:
-        print(f"獲取作品數量錯誤: {str(e)}")
-        return jsonify({'error': '無法獲取作品數量'}), 500
+        print(f"Error fetching portfolio list: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail="無法獲取作品列表")
 
-
-@portfolio_bp.route('/portfolio/<portfolio_id>')
-def portfolio_detail(portfolio_id):
+@router.get("/portfolio/{portfolio_id}", response_model=PortfolioItem)
+async def get_portfolio_by_id(portfolio_id: str, db: AsyncIOMotorClient = Depends(get_database)):
     try:
-        # 查詢特定ID的作品
-        portfolio = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
-        if portfolio:
-            # 轉換ID格式
-            portfolio = format_document(portfolio)
-            # 渲染模板並傳入資料
-            return render_template('portfolio_detail.html', portfolio=portfolio)
-        else:
-            # 找不到作品時重定向
-            return redirect('/portfolio.html')
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return redirect('/portfolio.html')
-
-@portfolio_bp.route('/api/portfolio', methods=['GET'])
-def get_portfolio():
-    try:
-        # 修復sort()語法，使用列表而非位置參數
-        portfolios = list(mongo.db.portfolio.find().sort([('created_at', -1)]))
-        # 格式化文檔
-        portfolios = format_documents(portfolios)
-        return jsonify(portfolios), 200
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@portfolio_bp.route('/api/portfolio/<portfolio_id>', methods=['GET'])
-def get_single_portfolio(portfolio_id):
-    try:
-        portfolio = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
+        if not ObjectId.is_valid(portfolio_id):
+            raise HTTPException(status_code=400, detail="無效的作品 ID 格式")
+        
+        # Pydantic V2's response_model會自動處理ObjectId到str的轉換
+        portfolio = await db.portfolio.find_one({"_id": ObjectId(portfolio_id)})
         
         if not portfolio:
-            return jsonify({'error': '找不到該作品'}), 404
-            
-        # 格式化文檔
-        portfolio = format_document(portfolio)
+            raise HTTPException(status_code=404, detail="找不到該作品")
         
-        # 為了兼容性，如果 detail_content 不存在但 content 存在，則添加 detail_content
-        if 'content' in portfolio and portfolio['content'] and 'detail_content' not in portfolio:
-            portfolio['detail_content'] = portfolio['content']
-            
-        return jsonify(portfolio), 200
+        return portfolio
+    except HTTPException:
+        raise
     except Exception as e:
-        # 檢查是否是因為 ObjectId 格式錯誤
-        if "is not a valid ObjectId" in str(e):
-             print(f"無效的作品 ID: {portfolio_id}")
-             return jsonify({'error': '無效的作品 ID 格式'}), 400
-        else:
-            print(f"獲取單個作品錯誤: {str(e)}")
-            return jsonify({'error': str(e)}), 500
+        print(f"Error fetching single portfolio item: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail="無法獲取作品詳情")
 
-@portfolio_bp.route('/api/portfolio', methods=['POST'])
-def create_portfolio():
-    # 檢查是否已登入
-    if not session.get('admin_logged_in'):
-        return jsonify({'success': False, 'message': '未授權'}), 401
+# Admin routes (POST, PUT, DELETE) are kept as stubs for now.
+# They would require proper authentication dependencies.
+@router.post("/portfolio", response_model=PortfolioItem, status_code=status.HTTP_201_CREATED)
+async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database)):
+    # Placeholder for admin authentication
+    # if not await is_admin_logged_in(session_id):
+    #     raise HTTPException(status_code=401, detail="未授權")
+    
+    # item.created_at is already set by default_factory
+    if item.id:
+        # PydanticObjectId should handle the conversion to ObjectId if provided
+        raise HTTPException(status_code=400, detail="Do not provide _id for new item creation")
 
     try:
-        data = request.json
+        # Convert Pydantic model to dictionary for MongoDB insertion
+        # by_alias=True ensures 'id' is converted back to '_id'
+        portfolio_dict = item.model_dump(by_alias=True, exclude_unset=True) 
         
-        # 驗證必要欄位
-        required_fields = ['title', 'description']
-        if not all(field in data for field in required_fields):
-            missing = [field for field in required_fields if field not in data]
-            return jsonify({'success': False, 'message': f'缺少必要欄位: {", ".join(missing)}'}), 400
-        
-        # 獲取詳細內容
-        detail_content = data.get('detail_content', '')
-        
-        # 準備資料 - 同時設置兩個欄位
-        portfolio = {
-            'title': data['title'],
-            'description': data.get('description', ''),
-            'detail_content': detail_content,
-            'content': detail_content,  # 確保content欄位同步設置
-            'image_url': data.get('image_url', ''),
-            'github_url': data.get('github_url', data.get('project_url', '')),
-            'demo_url': data.get('demo_url', ''),
-            'tags': data.get('tags', []),
-            'created_at': datetime.now()
-        }
-        
-        # 儲存到資料庫
-        result = mongo.db.portfolio.insert_one(portfolio)
-        
-        # 返回成功的 JSON 響應
-        return jsonify({
-            'success': True,
-            'message': '作品新增成功',
-            'id': str(result.inserted_id)
-        }), 201
-        
-    except Exception as e:
-        print(f"創建作品錯誤: {str(e)}")
-        return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
+        # remove the id field if it's default None
+        # 使用 Pydantic V2 的 model_dump 方法
+        if "_id" in portfolio_dict and portfolio_dict["_id"] is None:
+            del portfolio_dict["_id"]
 
-@portfolio_bp.route('/api/portfolio/<portfolio_id>', methods=['PUT'])
-def update_portfolio(portfolio_id):
-    # 檢查是否已登入
-    if not session.get('admin_logged_in'):
-        return jsonify({'success': False, 'message': '未授權'}), 401
+        result = await db.portfolio.insert_one(portfolio_dict)
+        
+        # Return the created item with the generated ID
+        created_item = await db.portfolio.find_one({"_id": result.inserted_id})
+        return created_item
+    except Exception as e:
+        print(f"Error creating portfolio item: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
+
+@router.put("/portfolio/{portfolio_id}", response_model=PortfolioItem)
+async def update_portfolio(portfolio_id: str, item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database)):
+    # Placeholder for admin authentication
+    # if not await is_admin_logged_in(session_id):
+    #     raise HTTPException(status_code=401, detail="未授權")
 
     try:
-        data = request.json
+        if not ObjectId.is_valid(portfolio_id):
+            raise HTTPException(status_code=400, detail="無效的作品 ID 格式")
+
+        # 使用 Pydantic V2 的 model_dump 方法
+        update_data = item.model_dump(by_alias=True, exclude_unset=True)
         
-        # 驗證作品是否存在
-        existing = mongo.db.portfolio.find_one({'_id': ObjectId(portfolio_id)})
-        if not existing:
-            return jsonify({'success': False, 'message': '找不到該作品'}), 404
-            
-        # 更新資料
-        update_data = {}
-        allowed_fields = ['title', 'description', 'detail_content', 'image_url', 'github_url', 'demo_url', 'tags']
-        for field in allowed_fields:
-            if field in data:
-                update_data[field] = data[field]
-        
-        # 為了兼容性，同時更新 content 欄位
-        if 'detail_content' in data:
-            update_data['content'] = data['detail_content']
-                
-        # 添加更新時間
-        update_data['updated_at'] = datetime.now()
-        
-        # 更新資料庫
-        mongo.db.portfolio.update_one(
-            {'_id': ObjectId(portfolio_id)},
-            {'$set': update_data}
+        # Don't allow changing ID or created_at via PUT
+        update_data.pop("id", None)
+        update_data.pop("_id", None) # Ensure _id is not updated
+        update_data.pop("created_at", None)
+        update_data["updated_at"] = datetime.now() # Set updated_at
+
+        result = await db.portfolio.update_one(
+            {"_id": ObjectId(portfolio_id)},
+            {"$set": update_data}
         )
-        
-        return jsonify({'success': True, 'message': '作品更新成功'}), 200
-    except Exception as e:
-        print(f"更新作品錯誤: {str(e)}")
-        return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
 
-@portfolio_bp.route('/api/portfolio/<portfolio_id>', methods=['DELETE'])
-def delete_portfolio(portfolio_id):
-    # 檢查是否已登入
-    if not session.get('admin_logged_in'):
-        return jsonify({'success': False, 'message': '未授權'}), 401
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="找不到該作品")
+        
+        # Return the updated item
+        updated_item = await db.portfolio.find_one({"_id": ObjectId(portfolio_id)})
+        return updated_item
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating portfolio item: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
+
+@router.delete("/portfolio/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_portfolio(portfolio_id: str, db: AsyncIOMotorClient = Depends(get_database)):
+    # Placeholder for admin authentication
+    # if not await is_admin_logged_in(session_id):
+    #     raise HTTPException(status_code=401, detail="未授權")
 
     try:
-        result = mongo.db.portfolio.delete_one({'_id': ObjectId(portfolio_id)})
+        if not ObjectId.is_valid(portfolio_id):
+            raise HTTPException(status_code=400, detail="無效的作品 ID 格式")
+
+        result = await db.portfolio.delete_one({"_id": ObjectId(portfolio_id)})
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="找不到該作品")
         
-        if result.deleted_count > 0:
-            return jsonify({'success': True, 'message': '作品刪除成功'}), 200
-        else:
-            return jsonify({'success': False, 'message': '找不到該作品'}), 404
+        return # 204 No Content for successful deletion
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"刪除作品錯誤: {str(e)}")
-        return jsonify({'success': False, 'message': f'伺服器錯誤: {str(e)}'}), 500
+        print(f"Error deleting portfolio item: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")

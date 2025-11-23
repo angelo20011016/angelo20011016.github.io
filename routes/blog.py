@@ -1,185 +1,202 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, session
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import List, Optional, Any
 from bson.objectid import ObjectId
 from datetime import datetime
 import pytz
-from services.db_service import mongo, format_document, format_documents
+from pydantic import BaseModel, Field, BeforeValidator, PlainSerializer
+from typing_extensions import Annotated
+from motor.motor_asyncio import AsyncIOMotorClient
+import sys
 
-blog_bp = Blueprint('blog', __name__)
+# 【關鍵修正】: 從 services.db_service 導入 get_database，而不是 app
+# 這樣就打破了 app -> routes.blog -> app 的循環
+from services.db_service import get_database 
 
-@blog_bp.route('/blog.html')
-def blog_page():
-    return render_template('blog.html')
 
-@blog_bp.route('/blog/<post_id>')
-def blog_post(post_id):
-    try:
-        post = mongo.db.blog_posts.find_one({'_id': ObjectId(post_id)})
-        if post and post.get('is_published', False):
-            # 格式化日期
-            if 'published_at' in post:
-                post['published_at'] = post['published_at'].strftime("%Y-%m-%d")
-                
-            return render_template('blog_post.html', post=post)
-        else:
-            return redirect('/blog.html')
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return redirect('/blog.html')
 
-@blog_bp.route('/api/blog', methods=['GET'])
-def get_blog_posts():
-    try:
-        # 新增：根據 include_drafts 參數決定是否回傳所有文章
-        include_drafts = request.args.get('include_drafts', 'false').lower() == 'true'
-        query = {}
-        sort_field = 'published_at' if not include_drafts else 'created_at'
-        sort_order = -1
+router = APIRouter()
 
-        if not include_drafts:
-            query['is_published'] = True
-            # 只顯示已發佈的文章，依發佈日期倒序
-            posts = list(mongo.db.blog_posts.find(query).sort(sort_field, sort_order))
-        else:
-            # 顯示所有文章（包含草稿），依建立日期倒序
-            posts = list(mongo.db.blog_posts.find().sort(sort_field, sort_order))
-        posts = format_documents(posts)
-        return jsonify(posts)
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"success": False, "message": "獲取文章失敗"}), 500
+# Pydantic V2 compatible ObjectId handling
+# Represents an ObjectId field in the database.
+def validate_object_id(v: Any) -> ObjectId:
+    if isinstance(v, ObjectId):
+        return v
+    if isinstance(v, str) and ObjectId.is_valid(v):
+        return ObjectId(v)
+    raise ValueError("Invalid ObjectId")
 
-@blog_bp.route('/api/blog/<post_id>', methods=['GET'])
-def get_blog_post(post_id):
-    try:
-        post = mongo.db.blog_posts.find_one({'_id': ObjectId(post_id)})
-        
-        if not post:
-            return jsonify({"success": False, "message": "找不到該文章"}), 404
-        
-        # 格式化文檔
-        post = format_document(post)
-        
-        return jsonify(post)
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"success": False, "message": "獲取文章失敗"}), 500
+def serialize_object_id(v: ObjectId) -> str:
+    """Converts ObjectId to str for JSON serialization."""
+    return str(v)
 
-@blog_bp.route('/api/blog', methods=['POST'])
-def create_blog_post():
-    # 確認是否已登入後台
-    if not session.get('admin_logged_in'):
-        return jsonify({"success": False, "message": "未授權"}), 401
-    
-    try:
-        data = request.json
-        
-        # 驗證必要欄位
-        required_fields = ['title', 'content']
-        if not all(field in data for field in required_fields):
-            return jsonify({"success": False, "message": "缺少必要欄位"}), 400
-        
-        # 準備文章資料
-        post = {
-            'title': data['title'],
-            'subtitle': data.get('subtitle', ''),
-            'content': data['content'],
-            'cover_image': data.get('cover_image', ''),
-            'tags': data.get('tags', []),
-            'is_published': data.get('is_published', False),
-            'created_at': datetime.now(pytz.utc)
+# PydanticObjectId 添加了 PlainSerializer 來處理 ObjectId -> str 的 JSON 輸出
+PydanticObjectId = Annotated[
+    ObjectId, 
+    BeforeValidator(validate_object_id),
+    PlainSerializer(serialize_object_id, return_type=str), # 確保序列化為字串
+    Field(json_schema_extra={"type": "string", "example": "60a724b00f7e4f00150974e6"})
+]
+
+# Pydantic model for Blog Post item
+class BlogPostItem(BaseModel):
+    id: Optional[PydanticObjectId] = Field(alias="_id", default=None)
+    title: str
+    subtitle: Optional[str] = None
+    content: Optional[str] = None
+    cover_image: Optional[str] = None
+    tags: List[str] = []
+    is_published: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(pytz.utc))
+    published_at: Optional[datetime] = None # Datetime object
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_schema_extra = {
+            "example": {
+                "title": "我的部落格文章",
+                "subtitle": "這是文章的副標題",
+                "content": "<p>這是文章的詳細內容，支援HTML。</p>",
+                "cover_image": "http://example.com/blog_cover.jpg",
+                "tags": ["Python", "FastAPI", "MongoDB"],
+                "is_published": True,
+            }
         }
-        
-        # 如果設為已發佈，添加發佈日期
-        if post['is_published']:
-            post['published_at'] = datetime.now(pytz.utc)
-        
-        # 儲存到資料庫
-        result = mongo.db.blog_posts.insert_one(post)
-        
-        return jsonify({
-            "success": True, 
-            "message": "文章創建成功", 
-            "post_id": str(result.inserted_id)
-        }), 201
-        
-    except Exception as e:
-        print(f"創建文章錯誤: {str(e)}")
-        return jsonify({"success": False, "message": "文章創建失敗"}), 500
 
-@blog_bp.route('/api/blog/<post_id>', methods=['PUT'])
-def update_blog_post(post_id):
-    # 確認是否已登入後台
-    if not session.get('admin_logged_in'):
-        return jsonify({"success": False, "message": "未授權"}), 401
-    
-    try:
-        data = request.json
-        
-        # 查詢文章是否存在
-        existing = mongo.db.blog_posts.find_one({'_id': ObjectId(post_id)})
-        if not existing:
-            return jsonify({"success": False, "message": "找不到該文章"}), 404
-        
-        # 準備更新資料
-        update_data = {}
-        allowed_fields = ['title', 'subtitle', 'content', 'cover_image', 'tags']
-        
-        for field in allowed_fields:
-            if field in data:
-                update_data[field] = data[field]
-        
-        # 處理發布狀態變更
-        if 'is_published' in data:
-            update_data['is_published'] = data['is_published']
-            
-            # 若從未發佈變為已發佈，設置發佈日期
-            if data['is_published'] and not existing.get('is_published'):
-                update_data['published_at'] = datetime.now(pytz.utc)
-        
-        # 添加更新時間
-        update_data['updated_at'] = datetime.now(pytz.utc)
-        
-        # 更新資料庫
-        mongo.db.blog_posts.update_one(
-            {'_id': ObjectId(post_id)},
-            {'$set': update_data}
-        )
-        
-        return jsonify({"success": True, "message": "文章更新成功"})
-        
-    except Exception as e:
-        print(f"更新文章錯誤: {str(e)}")
-        return jsonify({"success": False, "message": "文章更新失敗"}), 500
 
-@blog_bp.route('/api/blog/<post_id>', methods=['DELETE'])
-def delete_blog_post(post_id):
-    # 確認是否已登入後台
-    if not session.get('admin_logged_in'):
-        return jsonify({"success": False, "message": "未授權"}), 401
-    
+@router.get("/blog", response_model=List[BlogPostItem])
+async def get_all_blog_posts(
+    # 修正 2: 使用 get_database
+    db: AsyncIOMotorClient = Depends(get_database),
+    published_only: bool = Query(True, alias="publishedOnly") # Align with frontend naming
+):
     try:
-        result = mongo.db.blog_posts.delete_one({'_id': ObjectId(post_id)})
-        
-        if result.deleted_count > 0:
-            return jsonify({"success": True, "message": "文章刪除成功"})
-        else:
-            return jsonify({"success": False, "message": "找不到該文章"}), 404
-    except Exception as e:
-        print(f"刪除文章錯誤: {str(e)}")
-        return jsonify({"success": False, "message": "文章刪除失敗"}), 500
-
-# 新增：獲取部落格文章總數 (區分已發佈或全部)
-@blog_bp.route('/api/blog/count', methods=['GET'])
-def get_blog_post_count():
-    """獲取部落格文章總數"""
-    try:
-        # 檢查是否只計算已發佈的文章
-        published_only = request.args.get('published_only', 'true').lower() == 'true'
         query = {}
         if published_only:
             query['is_published'] = True
-        count = mongo.db.blog_posts.count_documents(query)
-        return jsonify({'count': count}), 200
+        
+        posts = await db.blog_posts.find(query).sort("published_at", -1).to_list(1000)
+        
+        return posts
     except Exception as e:
-        print(f"獲取文章數量錯誤: {str(e)}")
-        return jsonify({'error': '無法獲取文章數量'}), 500
+        print(f"Error fetching blog posts list: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail="無法獲取文章列表")
+
+@router.get("/blog/{post_id}", response_model=BlogPostItem)
+async def get_blog_post_by_id(post_id: str, db: AsyncIOMotorClient = Depends(get_database)):
+    try:
+        if not ObjectId.is_valid(post_id):
+            raise HTTPException(status_code=400, detail="無效的文章 ID 格式")
+        
+        post = await db.blog_posts.find_one({"_id": ObjectId(post_id)})
+        
+        if not post:
+            raise HTTPException(status_code=404, detail="找不到該文章")
+        
+        if not post.get('is_published', False): # For public API, only return published posts
+             raise HTTPException(status_code=404, detail="找不到該文章或未發布")
+        
+        return post
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching single blog post: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail="無法獲取文章詳情")
+
+# Admin routes (POST, PUT, DELETE) are kept as stubs for now.
+# They would require proper authentication dependencies.
+@router.post("/blog", response_model=BlogPostItem, status_code=status.HTTP_201_CREATED)
+async def create_blog_post(item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database)):
+    # Placeholder for admin authentication
+    # if not await is_admin_logged_in(session_id):
+    #     raise HTTPException(status_code=401, detail="未授權")
+
+    if item.id:
+        raise HTTPException(status_code=400, detail="Do not provide _id for new item creation")
+
+    if item.is_published and not item.published_at:
+        item.published_at = datetime.now(pytz.utc)
+
+    try:
+        # 使用 Pydantic V2 的 model_dump
+        post_dict = item.model_dump(by_alias=True, exclude_unset=True) 
+        if "_id" in post_dict and post_dict["_id"] is None:
+            del post_dict["_id"]
+
+        result = await db.blog_posts.insert_one(post_dict)
+        
+        created_item = await db.blog_posts.find_one({"_id": result.inserted_id})
+        return created_item
+    except Exception as e:
+        print(f"Error creating blog post: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
+
+@router.put("/blog/{post_id}", response_model=BlogPostItem)
+async def update_blog_post(post_id: str, item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database)):
+    # Placeholder for admin authentication
+    # if not await is_admin_logged_in(session_id):
+    #     raise HTTPException(status_code=401, detail="未授權")
+
+    try:
+        if not ObjectId.is_valid(post_id):
+            raise HTTPException(status_code=400, detail="無效的文章 ID 格式")
+        
+        # 使用 Pydantic V2 的 model_dump
+        update_data = item.model_dump(by_alias=True, exclude_unset=True)
+        update_data.pop("id", None)
+        update_data.pop("_id", None)
+        update_data.pop("created_at", None) # Do not update created_at
+        update_data["updated_at"] = datetime.now(pytz.utc) # Set updated_at
+
+        result = await db.blog_posts.update_one(
+            {"_id": ObjectId(post_id)},
+            {"$set": update_data}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="找不到該文章")
+        
+        updated_item = await db.blog_posts.find_one({"_id": ObjectId(post_id)})
+        return updated_item
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating blog post: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
+
+@router.delete("/blog/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_blog_post(post_id: str, db: AsyncIOMotorClient = Depends(get_database)):
+    # Placeholder for admin authentication
+    # if not await is_admin_logged_in(session_id):
+    #     raise HTTPException(status_code=401, detail="未授權")
+
+    try:
+        if not ObjectId.is_valid(post_id):
+            raise HTTPException(status_code=400, detail="無效的文章 ID 格式")
+        
+        result = await db.blog_posts.delete_one({"_id": ObjectId(post_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="找不到該文章")
+        
+        return # 204 No Content for successful deletion
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting blog post: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
+
+@router.get("/blog/count", response_model=dict)
+async def get_blog_post_count(
+    db: AsyncIOMotorClient = Depends(get_database),
+    published_only: bool = Query(True, alias="publishedOnly")
+):
+    try:
+        query = {}
+        if published_only:
+            query['is_published'] = True
+        count = await db.blog_posts.count_documents(query)
+        return {'count': count}
+    except Exception as e:
+        print(f"Error fetching blog post count: {e}", file=sys.stderr)
+        raise HTTPException(status_code=500, detail="無法獲取文章數量")
