@@ -23,15 +23,17 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, title, image
   const modalContentRef = useRef<HTMLDivElement>(null); // Ref for the inner modal content div
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'; // Prevent scrolling of body
-      document.documentElement.style.overflow = 'hidden'; // Prevent scrolling of html element
-      gsap.to(modalRef.current, { autoAlpha: 1, duration: 0.3, ease: 'power2.out' });
-    } else {
-      gsap.to(modalRef.current, { autoAlpha: 0, duration: 0.3, ease: 'power2.out', onComplete: () => {
-        document.body.style.overflow = 'visible'; // Restore body scrolling
-        document.documentElement.style.overflow = 'visible'; // Restore html scrolling
-      }});
+    if (modalRef.current) {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden'; // Prevent scrolling of body
+        document.documentElement.style.overflow = 'hidden'; // Prevent scrolling of html element
+        gsap.to(modalRef.current, { autoAlpha: 1, duration: 0.3, ease: 'power2.out' });
+      } else {
+        gsap.to(modalRef.current, { autoAlpha: 0, duration: 0.3, ease: 'power2.out', onComplete: () => {
+          document.body.style.overflow = 'visible'; // Restore body scrolling
+          document.documentElement.style.overflow = 'visible'; // Restore html scrolling
+        }});
+      }
     }
     // Cleanup function to ensure scroll is restored if component unmounts while modal is open
     return () => {

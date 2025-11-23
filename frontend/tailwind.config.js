@@ -26,6 +26,10 @@ module.exports = {
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
       },
+      textShadow: {
+        DEFAULT: '0 2px 4px rgba(0, 0, 0, 0.5)',
+        lg: '0 4px 8px rgba(0, 0, 0, 0.7)',
+      }
     },
   },
   plugins: [require('@tailwindcss/typography')],

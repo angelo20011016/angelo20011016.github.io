@@ -110,7 +110,7 @@ const VisionAndNewsletter: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
         <div ref={sideProjectCardRef} className="bg-zinc-900 p-8 rounded-lg shadow-lg flex flex-col items-start text-left">
           <FontAwesomeIcon icon={faRocket} className="text-white text-4xl mb-4" />
-          <h3 className="font-mono text-2xl font-bold mb-3 uppercase">Side Project 平台</h3>
+          <h3 className="font-mono text-2xl font-bold mb-3 uppercase text-shadow-lg">Side Project 平台</h3>
           <p className="font-inter text-gray-300 text-lg">
             打造一個開放的平台，提供各種實用的小工具和解決方案，幫助有需要的人解決實際問題。
           </p>
@@ -118,7 +118,7 @@ const VisionAndNewsletter: React.FC = () => {
         
         <div ref={newsletterCardRef} className="bg-zinc-900 p-8 rounded-lg shadow-lg flex flex-col items-start text-left">
           <FontAwesomeIcon icon={faNewspaper} className="text-white text-4xl mb-4" />
-          <h3 className="font-mono text-2xl font-bold mb-3 uppercase">電子報</h3>
+          <h3 className="font-mono text-2xl font-bold mb-3 uppercase text-shadow-lg">電子報</h3>
           <p className="font-inter text-gray-300 text-lg mb-6">
             分享學習心得、技術見解和有價值的資源，建立一個持續學習和成長的社群。
           </p>

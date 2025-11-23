@@ -8,9 +8,12 @@ import { useEffect } from "react";
 import SideNavigation from "../src/components/layout/SideNavigation";
 import Footer from "../src/components/layout/Footer"; // Import Footer component
 
+gsap.registerPlugin(ScrollTrigger);
+
 const syne = Syne({
   subsets: ["latin"],
   display: "swap",
+
   variable: "--font-syne",
 });
 
@@ -25,10 +28,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-  }, []);
-
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable}`}>
       <body>

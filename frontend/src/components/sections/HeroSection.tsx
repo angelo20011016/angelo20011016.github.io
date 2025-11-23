@@ -49,75 +49,87 @@ const HeroSection: React.FC = () => {
   };
 
   useEffect(() => {
-    // Animation for the personal photo
-    gsap.fromTo(photoRef.current,
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 1, ease: 'power3.out', delay: 0.2 }
-    );
-    // Initial animation for the main title (fade in)
-    gsap.fromTo(titleRef.current,
-      { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 0.5 }
-    );
-    // Animation for the bio text
-    gsap.fromTo(bioRef.current,
-      { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 0.8 }
-    );
-    // Animation for the buttons
-    gsap.fromTo(buttonsRef.current,
-      { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 1.1 }
-    );
-    // Animation for SkillCloud
-    gsap.fromTo(skillCloudRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
-        scrollTrigger: {
-          trigger: skillCloudRef.current,
-          start: 'top center+=200',
-          toggleActions: 'play none none reverse',
+    if (sectionRef.current) {
+      // Animation for the personal photo
+      gsap.fromTo(photoRef.current,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 1, ease: 'power3.out', delay: 0.2 }
+      );
+      // Initial animation for the main title (fade in)
+      gsap.fromTo(titleRef.current,
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 0.5 }
+      );
+      // Animation for the bio text
+      gsap.fromTo(bioRef.current,
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 0.8 }
+      );
+      // Animation for the buttons
+      gsap.fromTo(buttonsRef.current,
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 1.1 }
+      );
+      // Animation for SkillCloud
+      gsap.fromTo(skillCloudRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
+          scrollTrigger: {
+            trigger: skillCloudRef.current,
+            start: 'top center+=200',
+            toggleActions: 'play none none reverse',
+          }
         }
-      }
-    );
-    // Animation for VisionAndNewsletter
-    gsap.fromTo(visionAndNewsletterRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
-        scrollTrigger: {
-          trigger: visionAndNewsletterRef.current,
-          start: 'top center+=200',
-          toggleActions: 'play none none reverse',
+      );
+      // Animation for VisionAndNewsletter
+      gsap.fromTo(visionAndNewsletterRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
+          scrollTrigger: {
+            trigger: visionAndNewsletterRef.current,
+            start: 'top center+=200',
+            toggleActions: 'play none none reverse',
+          }
         }
-      }
-    );
-    // Animation for HobbiesSection
-    gsap.fromTo(hobbiesSectionRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
-        scrollTrigger: {
-          trigger: hobbiesSectionRef.current,
-          start: 'top center+=200',
-          toggleActions: 'play none none reverse',
+      );
+      // Animation for HobbiesSection
+      gsap.fromTo(hobbiesSectionRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
+          scrollTrigger: {
+            trigger: hobbiesSectionRef.current,
+            start: 'top center+=200',
+            toggleActions: 'play none none reverse',
+          }
         }
-      }
-    );
+      );
+    }
   }, []);
 
   return (
     <section id="hero" ref={sectionRef} className="min-h-screen w-full flex flex-col items-center justify-center p-8 bg-black text-white text-center relative z-10 overflow-hidden">
-      <div className="max-w-4xl mx-auto flex flex-col items-center py-16">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1531297484001-80022131f5a1"
+          alt="Abstract Background"
+          fill
+          className="object-cover opacity-10" // Adjust opacity as needed for subtlety
+          priority
+        />
+      </div>
+
+      <div className="max-w-4xl mx-auto flex flex-col items-center py-16 relative z-10">
         {/* Personal Photo */}
-        <div ref={photoRef} className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden mb-8 border-4 border-white shadow-lg">
+        <div ref={photoRef} className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden mb-8 border-4 border-white shadow-lg relative">
           <Image
             src="https://img8.uploadhouse.com/fileuploads/31936/31936778eb4b70130f3289122781a71f94414143.jpg"
             alt="Angelo照片"
-            width={256}
-            height={256}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 767px) 192px, 256px"
             priority
           />
         </div>

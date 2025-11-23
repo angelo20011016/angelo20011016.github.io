@@ -18,29 +18,31 @@ const ContactSection: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    gsap.fromTo(titleRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top center+=200',
-          toggleActions: 'play none none reverse',
+    if (sectionRef.current) {
+      gsap.fromTo(titleRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top center+=200',
+            toggleActions: 'play none none reverse',
+          }
         }
-      }
-    );
+      );
 
-    gsap.fromTo(formRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2,
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top center+=150',
-          toggleActions: 'play none none reverse',
+      gsap.fromTo(formRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top center+=150',
+            toggleActions: 'play none none reverse',
+          }
         }
-      }
-    );
+      );
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,7 +118,6 @@ const ContactSection: React.FC = () => {
           <div>
             <label htmlFor="message" className="block text-lg font-medium text-gray-300 mb-2 font-inter">訊息</label>
             <textarea
-              type="text" // Change type to text as textarea doesn't have type
               id="message"
               name="message"
               rows={5}

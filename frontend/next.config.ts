@@ -2,18 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      'img8.uploadhouse.com',
-      'img6.uploadhouse.com',
-      'img2.uploadhouse.com',
-      'img3.uploadhouse.com',
-      'images.unsplash.com',
-      'd22po4pjz3o32e.cloudfront.net',
-      'images.chinatimes.com', // 【關鍵修正】: 錯誤中提到的域名
-      'images.unsplash.com',   // 【關鍵修正】: 您的備用圖片的域名
-    ], // Add your image domains here
+    remotePatterns: [
+      { protocol: 'https', hostname: 'img8.uploadhouse.com' },
+      { protocol: 'https', hostname: 'img6.uploadhouse.com' },
+      { protocol: 'https', hostname: 'img2.uploadhouse.com' },
+      { protocol: 'https', hostname: 'img3.uploadhouse.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'd22po4pjz3o32e.cloudfront.net' },
+      { protocol: 'https', hostname: 'images.chinatimes.com' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+    ],
   },
   /* config options here */
 };
 
 export default nextConfig;
+

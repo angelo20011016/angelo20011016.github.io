@@ -30,41 +30,43 @@ const HobbiesSection: React.FC = () => {
   const hobbyCardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    gsap.fromTo(titleRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top center+=200',
-          toggleActions: 'play none none reverse',
-        }
-      }
-    );
-    gsap.fromTo(introTextRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2,
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top center+=150',
-          toggleActions: 'play none none reverse',
-        }
-      }
-    );
-    hobbyCardsRef.current.forEach((card, index) => {
-      gsap.fromTo(card,
+    if (sectionRef.current) {
+      gsap.fromTo(titleRef.current,
         { opacity: 0, y: 50 },
         {
-          opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2 * index + 0.4,
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top center+=100',
+            start: 'top center+=200',
             toggleActions: 'play none none reverse',
           }
         }
       );
-    });
+      gsap.fromTo(introTextRef.current,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top center+=150',
+            toggleActions: 'play none none reverse',
+          }
+        }
+      );
+      hobbyCardsRef.current.forEach((card, index) => {
+        gsap.fromTo(card,
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2 * index + 0.4,
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top center+=100',
+              toggleActions: 'play none none reverse',
+            }
+          }
+        );
+      });
+    }
   }, []);
 
   return (
@@ -88,8 +90,7 @@ const HobbiesSection: React.FC = () => {
               <Image
                 src={hobby.imageUrl}
                 alt={hobby.name}
-                width={300} // Appropriate width
-                height={160} // Adjusted height for 16:9 aspect ratio or similar
+                fill
                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                 quality={75}
                 priority={false} // Only load if visible
