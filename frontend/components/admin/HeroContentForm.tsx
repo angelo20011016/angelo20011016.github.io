@@ -1,13 +1,90 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { HeroSettings, getHeroSettings, updateHeroSettings } from '../../services/staticContentService';
-import { toast } from 'react-toastify'; // Assuming toast notifications are available
+import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../../services/authService';
 
-// Dynamically import SimpleMdeReact as it's a client-side component
-const SimpleMdeReact = dynamic(() => import('react-simplemde-editor'), { ssr: false });
-import "easymde/dist/easymde.min.css"; // Import the SimpleMDE stylesheet
+// Import the new Markdown editor
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
+
+
+// Sub-component for handling image uploads
+const ImageUploadField = ({ label, value, name, onUrlChange }) => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error("Authentication token not found.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('File upload failed');
+      }
+
+      const data = await response.json();
+      onUrlChange(name, data.file_path);
+      toast.success("Image uploaded successfully!");
+
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <label htmlFor={name} className="block text-gray-300 text-sm font-bold mb-2">{label}</label>
+      <div className="flex items-center gap-4">
+        <input
+          type="text"
+          id={name}
+          name={name}
+          value={value || ''}
+          onChange={(e) => onUrlChange(name, e.target.value)}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white"
+        />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleUpload}
+          className="hidden"
+          accept="image/*"
+        />
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 whitespace-nowrap"
+        >
+          {uploading ? 'Uploading...' : 'Upload'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 
 const HeroContentForm: React.FC = () => {
   const [settings, setSettings] = useState<HeroSettings | null>(null);
@@ -15,21 +92,25 @@ const HeroContentForm: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch initial settings
   useEffect(() => {
+    const fetchHeroSettings = async () => {
+      try {
+        setLoading(true);
+        const data = await getHeroSettings();
+        setSettings(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load hero settings.");
+        toast.error(err.message || "Failed to load hero settings.");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchHeroSettings();
   }, []);
-
-  const fetchHeroSettings = async () => {
-    try {
-      setLoading(true);
-      const data = await getHeroSettings();
-      setSettings(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load hero settings.");
-      toast.error(err.message || "Failed to load hero settings.");
-    } finally {
-      setLoading(false);
-    }
+  
+  const handleUrlChange = (name: string, url: string) => {
+    setSettings(prev => prev ? { ...prev, [name]: url } : null);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -37,15 +118,15 @@ const HeroContentForm: React.FC = () => {
     setSettings(prev => prev ? { ...prev, [name]: value } : null);
   };
 
-  const handleMdeChange = (value: string) => {
-    setSettings(prev => prev ? { ...prev, hero_bio_content: value } : null);
+  const handleMdeChange = (value: string | undefined) => {
+    setSettings(prev => prev ? { ...prev, hero_bio_content: value || '' } : null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
 
-    const token = localStorage.getItem('authToken'); // Get token from local storage
+    const token = localStorage.getItem('authToken');
     if (!token) {
       toast.error("Authentication token not found. Please log in.");
       return;
@@ -104,38 +185,28 @@ const HeroContentForm: React.FC = () => {
             required
           />
         </div>
-        <div>
-          <label htmlFor="hero_background_image_url" className="block text-gray-300 text-sm font-bold mb-2">Background Image URL:</label>
-          <input
-            type="text"
-            id="hero_background_image_url"
-            name="hero_background_image_url"
-            value={settings.hero_background_image_url || ''}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white"
-          />
-        </div>
-        <div>
-          <label htmlFor="hero_personal_photo_url" className="block text-gray-300 text-sm font-bold mb-2">Personal Photo URL:</label>
-          <input
-            type="text"
-            id="hero_personal_photo_url"
-            name="hero_personal_photo_url"
-            value={settings.hero_personal_photo_url || ''}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white"
-          />
-        </div>
-        <div>
+        
+        <ImageUploadField
+          label="Background Image URL:"
+          name="hero_background_image_url"
+          value={settings.hero_background_image_url}
+          onUrlChange={handleUrlChange}
+        />
+        
+        <ImageUploadField
+          label="Personal Photo URL:"
+          name="hero_personal_photo_url"
+          value={settings.hero_personal_photo_url}
+          onUrlChange={handleUrlChange}
+        />
+
+        <div data-color-mode="dark">
           <label htmlFor="hero_bio_content" className="block text-gray-300 text-sm font-bold mb-2">Bio Content (Markdown):</label>
-          <SimpleMdeReact
+          <MDEditor
             value={settings.hero_bio_content}
             onChange={handleMdeChange}
-            options={{
-              spellChecker: false,
-              hideIcons: ["guide", "fullscreen", "side-by-side"],
-              placeholder: "Write your biography here with Markdown...",
-            }}
+            preview="edit"
+            height={300}
           />
         </div>
         <div>
@@ -175,3 +246,4 @@ const HeroContentForm: React.FC = () => {
 };
 
 export default HeroContentForm;
+

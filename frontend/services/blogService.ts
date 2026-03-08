@@ -4,6 +4,7 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // Define the type for a blog post item based on the backend model
 interface BlogPostItem {
   id?: string;
+  _id?: string;
   title: string;
   subtitle?: string;
   content?: string;

@@ -45,7 +45,7 @@ class PortfolioItem(BaseModel):
         # Pydantic V2's dumps/loads handles ObjectId -> str conversion automatically with Annotated type
 
 
-@router.get("/portfolio", response_model=List[PortfolioItem])
+@router.get("/portfolio", response_model=List[PortfolioItem], response_model_by_alias=False)
 async def get_all_portfolio(db: AsyncIOMotorClient = Depends(get_database)):
     try:
         # Pydantic V2's response_model會自動處理ObjectId到str的轉換
@@ -56,7 +56,7 @@ async def get_all_portfolio(db: AsyncIOMotorClient = Depends(get_database)):
         print(f"Error fetching portfolio list: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="無法獲取作品列表")
 
-@router.get("/portfolio/{portfolio_id}", response_model=PortfolioItem)
+@router.get("/portfolio/{portfolio_id}", response_model=PortfolioItem, response_model_by_alias=False)
 async def get_portfolio_by_id(portfolio_id: str, db: AsyncIOMotorClient = Depends(get_database)):
     try:
         if not ObjectId.is_valid(portfolio_id):
@@ -76,7 +76,7 @@ async def get_portfolio_by_id(portfolio_id: str, db: AsyncIOMotorClient = Depend
         raise HTTPException(status_code=500, detail="無法獲取作品詳情")
 
 # Admin routes (POST, PUT, DELETE) are now protected.
-@router.post("/portfolio", response_model=PortfolioItem, status_code=status.HTTP_201_CREATED)
+@router.post("/portfolio", response_model=PortfolioItem, response_model_by_alias=False, status_code=status.HTTP_201_CREATED)
 async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     # item.created_at is already set by default_factory
     if item.id:
@@ -102,7 +102,7 @@ async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends
         print(f"Error creating portfolio item: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
 
-@router.put("/portfolio/{portfolio_id}", response_model=PortfolioItem)
+@router.put("/portfolio/{portfolio_id}", response_model=PortfolioItem, response_model_by_alias=False)
 async def update_portfolio(portfolio_id: str, item: PortfolioItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     try:
         if not ObjectId.is_valid(portfolio_id):

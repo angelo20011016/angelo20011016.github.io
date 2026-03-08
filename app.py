@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -52,6 +53,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Mount Static Files Directory ---
+# This line makes the 'static' folder accessible under the '/static' path
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # --- Import and Include FastAPI Routers ---
 # We will create these FastAPI routers in the next steps
 from routes.portfolio import router as portfolio_router
@@ -60,6 +65,9 @@ from routes.contact import router as contact_router
 from routes.user import router as user_router # Assuming user routes will also be migrated
 from routes.admin import router as admin_router
 from routes.static_content import router as static_content_router
+from routes.upload import router as upload_router # Import the new upload router
+from routes.skill import router as skill_router # Import the new skill router
+from routes.hobby import router as hobby_router # Import the new hobby router
 
 app.include_router(portfolio_router, prefix="/api")
 app.include_router(blog_router, prefix="/api")
@@ -67,6 +75,9 @@ app.include_router(contact_router, prefix="/api")
 app.include_router(user_router, prefix="/api") # Include user router
 app.include_router(admin_router, prefix="/api") # Include admin router
 app.include_router(static_content_router, prefix="/api")
+app.include_router(upload_router, prefix="/api") # Include the new upload router
+app.include_router(skill_router, prefix="/api") # Include the new skill router
+app.include_router(hobby_router, prefix="/api") # Include the new hobby router
 
 
 if __name__ == '__main__':

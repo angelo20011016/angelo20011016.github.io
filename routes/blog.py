@@ -66,7 +66,7 @@ class BlogPostItem(BaseModel):
         }
 
 
-@router.get("/blog", response_model=List[BlogPostItem])
+@router.get("/blog", response_model=List[BlogPostItem], response_model_by_alias=False)
 async def get_all_blog_posts(
     # 修正 2: 使用 get_database
     db: AsyncIOMotorClient = Depends(get_database),
@@ -84,7 +84,7 @@ async def get_all_blog_posts(
         print(f"Error fetching blog posts list: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="無法獲取文章列表")
 
-@router.get("/blog/all", response_model=List[BlogPostItem])
+@router.get("/blog/all", response_model=List[BlogPostItem], response_model_by_alias=False)
 async def get_all_blog_posts_admin(db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     """
     Admin-only route to get all posts, including unpublished ones.
@@ -96,7 +96,7 @@ async def get_all_blog_posts_admin(db: AsyncIOMotorClient = Depends(get_database
         print(f"Error fetching all blog posts for admin: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="無法獲取所有文章列表")
 
-@router.get("/blog/{post_id}", response_model=BlogPostItem)
+@router.get("/blog/{post_id}", response_model=BlogPostItem, response_model_by_alias=False)
 async def get_blog_post_by_id(post_id: str, db: AsyncIOMotorClient = Depends(get_database)):
     try:
         if not ObjectId.is_valid(post_id):
@@ -120,7 +120,7 @@ async def get_blog_post_by_id(post_id: str, db: AsyncIOMotorClient = Depends(get
         raise HTTPException(status_code=500, detail="無法獲取文章詳情")
 
 # Admin routes (POST, PUT, DELETE) are now protected
-@router.post("/blog", response_model=BlogPostItem, status_code=status.HTTP_201_CREATED)
+@router.post("/blog", response_model=BlogPostItem, response_model_by_alias=False, status_code=status.HTTP_201_CREATED)
 async def create_blog_post(item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     if item.id:
         raise HTTPException(status_code=400, detail="Do not provide _id for new item creation")
@@ -142,7 +142,7 @@ async def create_blog_post(item: BlogPostItem, db: AsyncIOMotorClient = Depends(
         print(f"Error creating blog post: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail=f"伺服器錯誤: {e}")
 
-@router.put("/blog/{post_id}", response_model=BlogPostItem)
+@router.put("/blog/{post_id}", response_model=BlogPostItem, response_model_by_alias=False)
 async def update_blog_post(post_id: str, item: BlogPostItem, db: AsyncIOMotorClient = Depends(get_database), admin_user: dict = Depends(get_current_admin_user)):
     try:
         if not ObjectId.is_valid(post_id):

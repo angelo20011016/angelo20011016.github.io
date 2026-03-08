@@ -3,6 +3,12 @@ import sys
 from contextlib import asynccontextmanager
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
+import dns.resolver # Import dnspython resolver
+
+# Fix for DNS resolution issues (e.g., "The resolution lifetime expired")
+# Force using Google DNS if the local system DNS (often 100.100.100.100 on some setups) fails or times out.
+dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 
 # Ensure .env is loaded (though app.py should also handle this)
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')

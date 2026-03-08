@@ -1,5 +1,5 @@
-// Note: In a real application, the API base URL should be in an environment variable.
-export const API_BASE_URL = 'http://127.0.0.1:8000';
+// Use environment variable for the API base URL, with a fallback for local development.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 /**
  * Logs in a user.

@@ -8,8 +8,10 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import SkillCloud from './SkillCloud';
 import VisionAndNewsletter from './VisionAndNewsletter';
-import HobbiesSection from './HobbiesSection'; // Import HobbiesSection component
+import HobbiesSection from './HobbiesSection';
 import { HeroSettings, getHeroSettings } from '../../services/staticContentService';
+import { API_BASE_URL } from '../../services/authService';
+import { TypewriterTitle } from '../common/TypewriterTitle';
 
 const HeroSection: React.FC = () => {
   const [settings, setSettings] = useState<HeroSettings | null>(null);
@@ -60,6 +62,15 @@ const HeroSection: React.FC = () => {
       try {
         setLoading(true);
         const data = await getHeroSettings();
+        
+        // Prepend API_BASE_URL to image URLs if they are relative paths
+        if (data.hero_background_image_url && !data.hero_background_image_url.startsWith('http')) {
+          data.hero_background_image_url = `${API_BASE_URL}${data.hero_background_image_url}`;
+        }
+        if (data.hero_personal_photo_url && !data.hero_personal_photo_url.startsWith('http')) {
+          data.hero_personal_photo_url = `${API_BASE_URL}${data.hero_personal_photo_url}`;
+        }
+        
         setSettings(data);
       } catch (err) {
         setError("Failed to load hero settings.");
@@ -144,13 +155,13 @@ const HeroSection: React.FC = () => {
   }
 
   return (
-    <section id="hero" ref={sectionRef} className="min-h-screen w-full flex flex-col items-center justify-center p-8 bg-black text-white text-center relative z-10 overflow-hidden">
-      <div className="absolute inset-0 z-0">
+    <section id="hero" ref={sectionRef} className="min-h-screen w-full flex flex-col items-center justify-center p-8 bg-transparent text-white text-center relative z-10 overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <Image
-          src={settings.hero_background_image_url || "https://images.unsplash.com/photo-1531297484001-80022131f5a1"}
+          src={settings.hero_background_image_url || `${API_BASE_URL}/static/images/portfolio/placeholder.svg`}
           alt="Abstract Background"
           fill
-          className="object-cover opacity-10" // Adjust opacity as needed for subtlety
+          className="object-cover opacity-20" // Reduced opacity to blend with Aurora
           priority
         />
       </div>
@@ -159,7 +170,7 @@ const HeroSection: React.FC = () => {
         {/* Personal Photo */}
         <div ref={photoRef} className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden mb-8 border-4 border-white shadow-lg relative">
           <Image
-            src={settings.hero_personal_photo_url || "https://img8.uploadhouse.com/fileuploads/31936/31936778eb4b70130f3289122781a71f94414143.jpg"}
+            src={settings.hero_personal_photo_url || `${API_BASE_URL}/static/images/portfolio/placeholder.svg`}
             alt="Angelo照片"
             fill
             className="object-cover"
@@ -176,7 +187,12 @@ const HeroSection: React.FC = () => {
         >
           {splitText(settings.hero_main_title)}
           <br />
-          {splitText(settings.hero_subtitle)}
+          {/* Replaced static subtitle with Typewriter */}
+          <TypewriterTitle 
+            sequence={[settings.hero_subtitle, 2000, 'Full Stack Developer', 2000, 'Creative Coder', 2000]}
+            className="text-4xl md:text-6xl text-indigo-400 block mt-2"
+            wrapper="span"
+          />
         </h1>
         <div ref={bioRef} className="text-lg md:text-xl text-gray-300 font-inter leading-relaxed mb-12 prose prose-invert">
           <ReactMarkdown rehypePlugins={[rehypeRaw]}>

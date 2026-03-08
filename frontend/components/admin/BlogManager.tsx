@@ -8,7 +8,8 @@ import { getBlogPostsAdmin, deleteBlogPost, createBlogPost, updateBlogPost } fro
 
 // Define the type for a blog post item based on the backend model
 interface BlogPostItem {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   subtitle?: string;
   content?: string;
@@ -76,9 +77,9 @@ export default function BlogManager() {
     }
 
     try {
-      if (editingItem && (editingItem.id || (editingItem as any)._id)) {
-        const itemId = editingItem.id || (editingItem as any)._id;
-        await updateBlogPost(itemId, cleanItemData, token);
+      const id = editingItem?.id || editingItem?._id;
+      if (editingItem && id) {
+        await updateBlogPost(id, cleanItemData, token);
       } else {
         await createBlogPost(cleanItemData, token);
       }
@@ -111,7 +112,7 @@ export default function BlogManager() {
 
     try {
       await deleteBlogPost(id, token);
-      setItems(items.filter(item => item.id !== id));
+      setItems(items.filter(item => (item.id || item._id) !== id));
     } catch (err: any) {
       setError(err.message || 'Failed to delete item.');
     }
@@ -146,8 +147,10 @@ export default function BlogManager() {
           </thead>
           <tbody>
             {items.length > 0 ? (
-              items.map((item, index) => (
-                <tr key={item.id || index} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
+              items.map((item, index) => {
+                const itemId = item.id || item._id;
+                return (
+                <tr key={itemId || index} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
                   <th scope="row" className="px-6 py-4 font-medium text-white whitespace-nowrap">
                     {item.title}
                   </th>
@@ -161,20 +164,20 @@ export default function BlogManager() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
                       {item.tags.map((tag, tagIndex) => (
-                        <span key={`${item.id}-${tag}-${tagIndex}`} className="px-2 py-1 text-xs bg-gray-600 rounded-full">{tag}</span>
+                        <span key={`${itemId}-${tag}-${tagIndex}`} className="px-2 py-1 text-xs bg-gray-600 rounded-full">{tag}</span>
                       ))}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                     <button onClick={() => handleEdit(item)} className="font-medium text-blue-500 hover:underline">Edit</button>
                     <button 
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => handleDelete(itemId!)}
                       className="font-medium text-red-500 hover:underline">
                       Delete
                     </button>
                   </td>
                 </tr>
-              ))
+              )})
             ) : (
               <tr>
                 <td colSpan={4} className="px-6 py-4 text-center">No blog posts found.</td>

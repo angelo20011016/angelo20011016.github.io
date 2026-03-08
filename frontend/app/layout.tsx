@@ -31,8 +31,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable}`}>
       <body>
-        <div className="flex bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1518625942488-b2a8d5f4c4a4?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1920&h=1080&fit=crop')" }}>
-          <div className="absolute inset-0 bg-black opacity-80 z-0"></div> {/* Dark overlay */}
+        <div className="flex min-h-screen relative overflow-x-hidden">
+           {/* Aurora Background */}
+          <div className="aurora-bg">
+            <div className="aurora-blob-1"></div>
+            <div className="aurora-blob-2"></div>
+            <div className="aurora-blob-3"></div>
+          </div>
+          
           <SideNavigation />
           <main className="flex-grow relative z-10">
             {children}

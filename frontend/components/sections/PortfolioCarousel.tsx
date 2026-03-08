@@ -17,6 +17,9 @@ interface PortfolioItem {
   created_at?: string;
 }
 
+// Define the base URL for the API. Use environment variables for production.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 const PortfolioCarousel: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
@@ -27,12 +30,19 @@ const PortfolioCarousel: React.FC = () => {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/portfolio');
+        const response = await fetch(`${API_BASE_URL}/api/portfolio`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data: PortfolioItem[] = await response.json();
-        setPortfolioItems(data);
+        
+        // Prepend the API base URL to each image_url
+        const itemsWithFullImageUrls = data.map(item => ({
+          ...item,
+          image_url: item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`
+        }));
+        setPortfolioItems(itemsWithFullImageUrls);
+
       } catch (e: any) {
         setError(e.message);
       } finally {

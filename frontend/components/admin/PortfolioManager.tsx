@@ -7,7 +7,8 @@ import PortfolioForm from '@/components/admin/PortfolioForm';
 
 // Define the type for a portfolio item based on the backend model
 interface PortfolioItem {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   description: string;
   content?: string;
@@ -68,10 +69,10 @@ export default function PortfolioManager() {
     try {
       // The 'cleanItemData' from the form no longer contains an 'id'.
       // We decide whether to update or create based on the 'editingItem' state.
-      if (editingItem && (editingItem.id || editingItem._id)) {
+      const id = editingItem?.id || editingItem?._id;
+      if (editingItem && id) {
         // Update existing item, using whichever id property exists
-        const itemId = editingItem.id || editingItem._id;
-        await updatePortfolioItem(itemId, cleanItemData, token);
+        await updatePortfolioItem(id, cleanItemData, token);
       } else {
         // Create new item
         await createPortfolioItem(cleanItemData, token);
@@ -108,7 +109,7 @@ export default function PortfolioManager() {
 
     try {
       await deletePortfolioItem(id, token);
-      setItems(items.filter(item => item.id !== id));
+      setItems(items.filter(item => (item.id || item._id) !== id));
     } catch (err: any) {
       setError(err.message || 'Failed to delete item.');
     }
@@ -143,8 +144,10 @@ export default function PortfolioManager() {
           </thead>
           <tbody>
             {items.length > 0 ? (
-              items.map((item, index) => (
-                <tr key={item.id || index} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
+              items.map((item, index) => {
+                const itemId = item.id || item._id;
+                return (
+                <tr key={itemId || index} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
                   <th scope="row" className="px-6 py-4 font-medium text-white whitespace-nowrap">
                     {item.title}
                   </th>
@@ -152,20 +155,20 @@ export default function PortfolioManager() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
                       {item.tags.map((tag, tagIndex) => (
-                        <span key={`${item.id}-${tag}-${tagIndex}`} className="px-2 py-1 text-xs bg-gray-600 rounded-full">{tag}</span>
+                        <span key={`${itemId}-${tag}-${tagIndex}`} className="px-2 py-1 text-xs bg-gray-600 rounded-full">{tag}</span>
                       ))}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                     <button onClick={() => handleEdit(item)} className="font-medium text-blue-500 hover:underline">Edit</button>
                     <button 
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => handleDelete(itemId!)}
                       className="font-medium text-red-500 hover:underline">
                       Delete
                     </button>
                   </td>
                 </tr>
-              ))
+              )})
             ) : (
               <tr>
                 <td colSpan={4} className="px-6 py-4 text-center">No portfolio items found.</td>

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import React, { useEffect, useState } from 'react';
 import DetailModal from '../common/DetailModal'; // Import DetailModal
 import Image from 'next/image';
+import { ScrollReveal } from '../common/ScrollReveal';
 
 interface BlogPostItem {
   id: string;
@@ -16,10 +16,6 @@ interface BlogPostItem {
 }
 
 const BlogSection: React.FC = () => {
-  const sectionRef = useRef(null);
-  const titleRef = useRef(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]); // Ref for individual cards for animation
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<BlogPostItem | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPostItem[]>([]);
@@ -52,42 +48,6 @@ const BlogSection: React.FC = () => {
     fetchBlogPosts();
   }, []);
 
-  useEffect(() => {
-    if (sectionRef.current) {
-      // GSAP animation for the title
-      gsap.fromTo(titleRef.current,
-        { opacity: 0, y: 50 },
-        {
-          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top center+=200',
-            toggleActions: 'play none none reverse',
-          }
-        }
-      );
-
-      // GSAP animation for individual cards (only if not loading/error and items exist)
-      if (!loading && !error && blogPosts.length > 0) {
-        cardsRef.current.forEach((card, index) => {
-          if (card) {
-            gsap.fromTo(card,
-              { opacity: 0, y: 50 },
-              {
-                opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2 * index,
-                scrollTrigger: {
-                  trigger: sectionRef.current,
-                  start: 'top center+=100',
-                  toggleActions: 'play none none reverse',
-                }
-              }
-            );
-          }
-        });
-      }
-    }
-  }, [loading, error, blogPosts]); // Rerun animation effect when data changes
-
   const openModal = (item: BlogPostItem) => {
     setSelectedItem(item);
     setIsModalOpen(true);
@@ -111,45 +71,47 @@ const BlogSection: React.FC = () => {
   }
 
   return (
-    <section ref={sectionRef} id="blog" className="min-h-screen w-full flex flex-col items-center justify-center p-8 md:p-16 bg-black text-white">
-      <h2 ref={titleRef} className="font-mono text-5xl md:text-7xl font-bold mb-16 tracking-wide">
-        我的部落格
-      </h2>
+    <section id="blog" className="min-h-screen w-full flex flex-col items-center justify-center p-8 md:p-16 bg-transparent text-white">
+      <ScrollReveal className="w-full flex justify-center">
+        <h2 className="font-mono text-5xl md:text-7xl font-bold mb-16 tracking-wide">
+          我的部落格
+        </h2>
+      </ScrollReveal>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl">
         {blogPosts.map((post, index) => {
           if (!post || typeof post !== 'object') {
             return null; // Don't render if post is not a valid object
           }
-          console.log('Rendering blog post image with URL:', post.imageUrl);
           return (
-            <div
-              key={post.id || `blog-post-${index}`} // 【修正點】: 如果 post.id 不存在，則使用 index 作為後備鍵
-              ref={el => { cardsRef.current[index] = el; }}
-              onClick={() => openModal(post)}
-              className="group cursor-pointer relative overflow-hidden rounded-lg shadow-lg bg-zinc-900 hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative w-full h-48 overflow-hidden">
-                <Image
-                  src={(post.imageUrl && typeof post.imageUrl === 'string' && post.imageUrl.startsWith('http')) ? post.imageUrl : 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=800'} // Fallback image
-                  alt={post.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="transform group-hover:scale-105 transition-transform duration-300 object-cover"
-                />
-                <div className="absolute inset-0 bg-black opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
+            <ScrollReveal key={post.id || `blog-post-${index}`} delay={index * 0.1} width="100%">
+              <div
+                onClick={() => openModal(post)}
+                className="group cursor-pointer relative overflow-hidden rounded-lg shadow-lg bg-zinc-900/80 hover:shadow-xl transition-all duration-300 border border-transparent hover:border-indigo-500/50 backdrop-blur-sm"
+              >
+                <div className="relative w-full h-48 overflow-hidden">
+                  <Image
+                    src={(post.imageUrl && typeof post.imageUrl === 'string' && post.imageUrl.startsWith('http')) ? post.imageUrl : 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=800'} // Fallback image
+                    alt={post.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="transform group-hover:scale-105 transition-transform duration-300 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-mono text-2xl font-bold mb-2 group-hover:text-indigo-400 transition-colors duration-300 text-shadow-lg">
+                    {post.title}
+                  </h3>
+                  <p className="font-inter text-gray-400 text-sm mb-4 line-clamp-3">
+                    {post.description}
+                  </p>
+                  <p className="font-inter text-gray-500 text-xs uppercase tracking-wider">
+                    {post.published_at ? new Date(post.published_at).toLocaleDateString() : ''}
+                  </p>
+                </div>
               </div>
-              <div className="p-6">
-                <h3 className="font-mono text-2xl font-bold mb-2 group-hover:text-gray-200 transition-colors duration-300 text-shadow-lg">
-                  {post.title}
-                </h3>
-                <p className="font-inter text-gray-400 text-sm mb-4">
-                  {post.description}
-                </p>
-                <p className="font-inter text-gray-500 text-xs uppercase tracking-wider">
-                  {post.published_at} {/* Display published_at */}
-                </p>
-              </div>
-            </div>
+            </ScrollReveal>
           );
         })}
       </div>

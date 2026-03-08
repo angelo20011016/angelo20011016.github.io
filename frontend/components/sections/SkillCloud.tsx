@@ -1,53 +1,75 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCode, faServer, faHandshake, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { faCode, faServer, faHandshake, faChartLine, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { getSkills, Skill } from '../../services/skillService'; // Import service and type
 
-const skillsData = [
-  {
-    id: 'frontend',
-    icon: faCode,
-    main: '前端開發',
-    subSkills: ['HTML/CSS', 'JavaScript', 'TailwindCSS', '響應式設計'],
-  },
-  {
-    id: 'backend',
-    icon: faServer,
-    main: '後端開發',
-    subSkills: ['Python', 'Flask', 'MongoDB/MySQL', 'RESTful API', 'EventLet'],
-  },
-  {
-    id: 'business',
-    icon: faHandshake,
-    main: '業務能力',
-    subSkills: ['提案技巧', '簡報製作', '商業/競品分析', '陌生開發', '客戶維護'],
-  },
-  {
-    id: 'data',
-    icon: faChartLine,
-    main: '數據分析',
-    subSkills: ['統計分析', '資料視覺化', '機器學習', '數據解讀'],
-  },
-];
+// Icon map to dynamically render icons based on string from DB
+const iconMap = {
+  faCode,
+  faServer,
+  faHandshake,
+  faChartLine,
+};
 
 const SkillCloud: React.FC = () => {
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        setLoading(true);
+        const data = await getSkills();
+        setSkills(data);
+      } catch (err: any) {
+        setError("Failed to load skills.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSkills();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mt-20 w-full max-w-5xl text-center">
+        <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">我的技能樹</h2>
+        <p className="text-gray-400">Loading skills...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-20 w-full max-w-5xl text-center">
+        <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">我的技能樹</h2>
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-20 w-full max-w-5xl">
       <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">我的技能樹</h2>
       
       <div className="flex flex-wrap justify-center gap-6 md:gap-8 relative z-20">
-        {skillsData.map((category) => (
+        {skills.map((category) => (
           <div
             key={category.id}
             className="skill-category relative"
-            onMouseEnter={() => setHoveredSkill(category.id)}
+            onMouseEnter={() => setHoveredSkill(category.id!)}
             onMouseLeave={() => setHoveredSkill(null)}
           >
-            <div className="main-skill bg-zinc-800 text-white px-6 py-3 rounded-full font-bold text-lg cursor-pointer transition-all duration-300 flex items-center hover:bg-white hover:text-black">
-              <FontAwesomeIcon icon={category.icon} className="mr-3 text-white group-hover:text-black transition-colors duration-300" />
+            <div className="main-skill bg-zinc-800 text-white px-6 py-3 rounded-full font-bold text-lg cursor-pointer transition-all duration-300 flex items-center hover:bg-white hover:text-black group">
+              <FontAwesomeIcon 
+                icon={iconMap[category.icon] || faQuestionCircle} 
+                className="mr-3 text-white group-hover:text-black transition-colors duration-300" 
+              />
               {category.main}
             </div>
             {hoveredSkill === category.id && (
