@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { ScrollReveal } from '../common/ScrollReveal';
+import { motion } from 'framer-motion';
+import Magnetic from '../common/Magnetic';
 
 const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -21,104 +20,147 @@ const ContactSection: React.FC = () => {
     try {
       const response = await fetch('http://localhost:8000/api/contactme', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, message }),
       });
 
       const data = await response.json();
-
       if (response.ok) {
         setIsSuccess(true);
-        setStatusMessage(data.message || '您的訊息已成功送出！');
-        setName('');
-        setEmail('');
-        setMessage('');
+        setStatusMessage(data.message || 'SUCCESS!');
+        setName(''); setEmail(''); setMessage('');
       } else {
         setIsSuccess(false);
-        setStatusMessage(data.detail || data.message || '訊息送出失敗，請稍後再試。');
+        setStatusMessage(data.detail || 'ERROR');
       }
     } catch (error) {
-      console.error('聯絡表單提交失敗:', error);
       setIsSuccess(false);
-      setStatusMessage('連接伺服器時出錯，請稍後再試。');
+      setStatusMessage('SERVER ERROR');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section id="contact" className="min-h-screen w-full flex flex-col items-center justify-center p-8 md:p-16 bg-transparent text-white">
-      <ScrollReveal className="w-full flex justify-center">
-        <h2 className="font-mono text-5xl md:text-7xl font-bold mb-16 tracking-wide text-center">
-          聯絡我
-        </h2>
-      </ScrollReveal>
-      
-      <ScrollReveal className="w-full max-w-md" delay={0.3}>
-        <div className="bg-zinc-900/90 backdrop-blur-md rounded-lg shadow-lg p-8 md:p-12 border border-zinc-800">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-lg font-medium text-gray-300 mb-2 font-inter">姓名</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className="mt-1 block w-full px-4 py-3 border border-zinc-700 rounded-md shadow-sm focus:ring-white focus:border-white bg-zinc-800 text-white placeholder-gray-500 transition-colors"
-                placeholder="您的姓名"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-lg font-medium text-gray-300 mb-2 font-inter">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className="mt-1 block w-full px-4 py-3 border border-zinc-700 rounded-md shadow-sm focus:ring-white focus:border-white bg-zinc-800 text-white placeholder-gray-500 transition-colors"
-                placeholder="您的電子郵件"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label htmlFor="message" className="block text-lg font-medium text-gray-300 mb-2 font-inter">訊息</label>
-              <textarea
-                id="message"
-                name="message"
-                rows={5}
-                className="mt-1 block w-full px-4 py-3 border border-zinc-700 rounded-md shadow-sm focus:ring-white focus:border-white bg-zinc-800 text-white placeholder-gray-500 transition-colors"
-                placeholder="您想說些什麼？"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                required
-                disabled={loading}
-              ></textarea>
-            </div>
-            {statusMessage && (
-              <div
-                className={`text-center p-3 rounded-md ${isSuccess ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}
-              >
-                {statusMessage}
-              </div>
-            )}
-            <button
-              type="submit"
-              className="w-full py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-black bg-white hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300 font-mono uppercase tracking-wider"
-              disabled={loading}
+    <section id="contact" className="relative w-full bg-[#1c1d20] text-white flex flex-col overflow-hidden pt-32">
+      {/* Main Content */}
+      <div className="w-full px-6 md:px-12 lg:px-24 mb-32">
+        <div className="max-w-7xl mx-auto flex flex-col gap-20">
+          
+          {/* Top: Massive Title */}
+          <div className="border-b border-white/10 pb-12">
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="text-7xl md:text-8xl lg:text-[12rem] font-mono font-bold uppercase tracking-tighter leading-none"
             >
-              {loading ? <FontAwesomeIcon icon={faSpinner} spin className="mr-2" /> : ''}
-              送出訊息
-            </button>
-          </form>
+              Contact
+            </motion.h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+            {/* Left: Contact Info */}
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">Get in touch</p>
+                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">angelo@example.com</p>
+                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">+886 912 345 678</p>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">Location</p>
+                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">Taipei, Taiwan</p>
+              </div>
+            </div>
+
+            {/* Right: Simple Form */}
+            <div className="w-full">
+              <form onSubmit={handleSubmit} className="space-y-12">
+                <div className="space-y-2">
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">01 / What's your name?</label>
+                  <input
+                    type="text"
+                    placeholder="NAME"
+                    className="w-full bg-transparent border-b border-white/20 py-4 outline-none text-2xl md:text-3xl font-mono uppercase focus:border-white transition-colors"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">02 / What's your email?</label>
+                  <input
+                    type="email"
+                    placeholder="EMAIL"
+                    className="w-full bg-transparent border-b border-white/20 py-4 outline-none text-2xl md:text-3xl font-mono uppercase focus:border-white transition-colors"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">03 / Your message</label>
+                  <textarea
+                    placeholder="MESSAGE"
+                    rows={4}
+                    className="w-full bg-transparent border-b border-white/20 py-4 outline-none text-2xl md:text-3xl font-mono uppercase focus:border-white transition-colors resize-none"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 pt-6">
+                  {statusMessage && (
+                    <p className={`font-mono text-base uppercase tracking-widest ${isSuccess ? 'text-green-400' : 'text-red-400'}`}>
+                      {statusMessage}
+                    </p>
+                  )}
+                  
+                  <Magnetic>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-32 h-32 md:w-44 md:h-44 rounded-full bg-white text-black font-mono font-bold uppercase text-sm tracking-widest hover:scale-105 transition-transform disabled:opacity-50 flex items-center justify-center text-center px-4"
+                    >
+                      {loading ? 'Sending' : 'Send'}
+                    </button>
+                  </Magnetic>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-      </ScrollReveal>
+      </div>
+
+      {/* Footer Info Area */}
+      <div className="w-full px-6 md:px-12 lg:px-24 py-20 border-t border-white/10 flex flex-col md:flex-row justify-between items-start md:items-end gap-16 bg-black/40">
+        <div className="flex flex-col gap-12">
+          <div className="flex flex-col gap-6">
+            <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">Socials</p>
+            <div className="flex flex-wrap gap-8 md:gap-12 font-mono text-lg md:text-xl uppercase tracking-[0.1em]">
+              <a href="https://github.com/angeloange?tab=repositories" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">GitHub</a>
+              <a href="https://www.instagram.com/angelo__1016/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">Instagram</a>
+              <a href="https://www.youtube.com/@Happywecan" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">YouTube</a>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 md:gap-16 font-mono text-sm md:text-base uppercase tracking-[0.1em] text-white/40">
+            <p>© 2026 Angelo — Created with Passion</p>
+            <p>Built with Next.js & GSAP</p>
+          </div>
+        </div>
+        
+        <div className="text-left md:text-right flex flex-col gap-6">
+          <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">Local Time</p>
+          <p className="font-mono text-xl md:text-2xl uppercase tracking-widest">
+            {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })} TPE
+          </p>
+        </div>
+      </div>
     </section>
   );
 };

@@ -4,16 +4,17 @@ import { Syne, Inter } from "next/font/google";
 import "./globals.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useEffect } from "react";
+import SmoothScroll from "@/components/common/SmoothScroll";
+import TopNavigation from "@/components/layout/TopNavigation";
 import SideNavigation from "@/components/layout/SideNavigation";
-import Footer from "@/components/layout/Footer"; // Import Footer component
+import CustomCursor from "@/components/common/CustomCursor";
+import Footer from "@/components/layout/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const syne = Syne({
   subsets: ["latin"],
   display: "swap",
-
   variable: "--font-syne",
 });
 
@@ -30,21 +31,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable}`}>
-      <body>
-        <div className="flex min-h-screen relative overflow-x-hidden">
-           {/* Aurora Background */}
-          <div className="aurora-bg">
-            <div className="aurora-blob-1"></div>
-            <div className="aurora-blob-2"></div>
-            <div className="aurora-blob-3"></div>
+      <body className="bg-background text-foreground antialiased selection:bg-primary selection:text-white cursor-none">
+        <SmoothScroll>
+          <CustomCursor />
+          <div className="flex flex-col min-h-screen relative">
+            <TopNavigation />
+            <SideNavigation />
+            <main className="flex-grow relative z-10">
+              {children}
+            </main>
           </div>
-          
-          <SideNavigation />
-          <main className="flex-grow relative z-10">
-            {children}
-            <Footer /> {/* Integrated Footer */}
-          </main>
-        </div>
+        </SmoothScroll>
       </body>
     </html>
   );

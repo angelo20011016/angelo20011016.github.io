@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import DetailModal from '../common/DetailModal'; // Import DetailModal
-import Image from 'next/image';
-import { ScrollReveal } from '../common/ScrollReveal';
+import DetailModal from '../common/DetailModal';
+import { motion } from 'framer-motion';
 
 interface BlogPostItem {
   id: string;
   title: string;
-  description?: string; // Subtitle from backend
-  imageUrl?: string; // cover_image from backend (renamed to imageUrl for consistency)
+  description?: string;
+  imageUrl?: string;
   content?: string;
   tags?: string[];
-  published_at?: string; // published_at from backend (renamed to date for consistency)
+  published_at?: string;
+  cover_image?: string;
+  subtitle?: string;
 }
 
 const BlogSection: React.FC = () => {
@@ -20,113 +21,81 @@ const BlogSection: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<BlogPostItem | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPostItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/blog?publishedOnly=true'); // Fetch only published posts
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch('http://localhost:8000/api/blog?publishedOnly=true');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data: BlogPostItem[] = await response.json();
-        // Map backend data fields to frontend model for consistency
         const formattedData = data.map(post => ({
           ...post,
-          imageUrl: post.imageUrl || post.cover_image, // Use imageUrl or fallback to cover_image
-          date: post.published_at, // Map published_at to date
-          description: post.description || post.subtitle, // Use description or fallback to subtitle
+          imageUrl: post.imageUrl || post.cover_image,
+          description: post.description || post.subtitle,
         }));
         setBlogPosts(formattedData);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
     };
-
     fetchBlogPosts();
   }, []);
 
-  const openModal = (item: BlogPostItem) => {
-    setSelectedItem(item);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedItem(null);
-  };
-
-  if (loading) {
-    return <div className="text-white text-center py-12">載入部落格文章中...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center py-12">錯誤: {error}</div>;
-  }
-
-  if (blogPosts.length === 0) {
-    return <div className="text-gray-400 text-center py-12">目前沒有部落格文章。</div>;
-  }
+  if (loading) return null;
 
   return (
-    <section id="blog" className="min-h-screen w-full flex flex-col items-center justify-center p-8 md:p-16 bg-transparent text-white">
-      <ScrollReveal className="w-full flex justify-center">
-        <h2 className="font-mono text-5xl md:text-7xl font-bold mb-16 tracking-wide">
-          我的部落格
-        </h2>
-      </ScrollReveal>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl">
-        {blogPosts.map((post, index) => {
-          if (!post || typeof post !== 'object') {
-            return null; // Don't render if post is not a valid object
-          }
-          return (
-            <ScrollReveal key={post.id || `blog-post-${index}`} delay={index * 0.1} width="100%">
-              <div
-                onClick={() => openModal(post)}
-                className="group cursor-pointer relative overflow-hidden rounded-lg shadow-lg bg-zinc-900/80 hover:shadow-xl transition-all duration-300 border border-transparent hover:border-indigo-500/50 backdrop-blur-sm"
-              >
-                <div className="relative w-full h-48 overflow-hidden">
-                  <Image
-                    src={(post.imageUrl && typeof post.imageUrl === 'string' && post.imageUrl.startsWith('http')) ? post.imageUrl : 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=800'} // Fallback image
-                    alt={post.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="transform group-hover:scale-105 transition-transform duration-300 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-40 group-hover:opacity-20 transition-opacity duration-300"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-mono text-2xl font-bold mb-2 group-hover:text-indigo-400 transition-colors duration-300 text-shadow-lg">
-                    {post.title}
-                  </h3>
-                  <p className="font-inter text-gray-400 text-sm mb-4 line-clamp-3">
-                    {post.description}
-                  </p>
-                  <p className="font-inter text-gray-500 text-xs uppercase tracking-wider">
-                    {post.published_at ? new Date(post.published_at).toLocaleDateString() : ''}
-                  </p>
-                </div>
-              </div>
-            </ScrollReveal>
-          );
-        })}
+    <section id="blog" className="min-h-screen w-full flex flex-col pt-32 pb-20 bg-background text-white px-8">
+      <div className="mask-reveal mb-20">
+         <motion.h2 
+           initial={{ y: "100%" }}
+           whileInView={{ y: "0%" }}
+           transition={{ duration: 1, ease: [0.25, 1, 0.5, 1] }}
+           className="text-[10vw] font-mono font-bold uppercase tracking-tighter leading-none"
+         >
+           Insights
+         </motion.h2>
       </div>
 
-      {/* Detail Modal */}
+      <div className="w-full max-w-7xl mx-auto flex flex-col border-t border-white/10">
+        {blogPosts.map((post, index) => (
+          <div
+            key={post.id}
+            onClick={() => {
+              setSelectedItem(post);
+              setIsModalOpen(true);
+            }}
+            className="group flex flex-col md:flex-row md:items-center justify-between py-10 border-b border-white/10 cursor-pointer transition-all duration-300 hover:px-4"
+          >
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-12">
+               <span className="text-white/60 font-mono text-base uppercase tracking-widest">
+                 {post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'MAY 01'}
+               </span>
+               <h3 className="text-4xl md:text-6xl font-mono font-bold uppercase tracking-tighter group-hover:text-primary transition-colors">
+                 {post.title}
+               </h3>
+            </div>
+            
+            <div className="mt-4 md:mt-0">
+               <span className="text-white/80 font-mono text-sm uppercase tracking-widest border border-white/40 px-6 py-3 rounded-full group-hover:bg-white group-hover:text-black transition-all">
+                 Read More
+               </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {selectedItem && (
         <DetailModal
           isOpen={isModalOpen}
-          onClose={closeModal}
+          onClose={() => setIsModalOpen(false)}
           title={selectedItem.title}
           image={selectedItem.imageUrl}
           description={selectedItem.description}
           content={selectedItem.content}
           tags={selectedItem.tags}
-          date={selectedItem.published_at} // Pass published_at to modal
+          date={selectedItem.published_at}
         />
       )}
     </section>

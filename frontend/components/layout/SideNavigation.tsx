@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Link as ScrollLink, scroller } from 'react-scroll';
+import { Link as ScrollLink } from 'react-scroll';
 
 const navItems = [
-  { id: 'hero', label: '關於我' },
-  { id: 'portfolio', label: '作品集' },
-  { id: 'blog', label: '部落格' },
-  { id: 'contact', label: '聯絡我' },
+  { id: 'hero', label: 'Home' },
+  { id: 'portfolio', label: 'Work' },
+  { id: 'blog', label: 'Blog' },
+  { id: 'contact', label: 'Contact' },
 ];
 
 const SideNavigation: React.FC = () => {
@@ -20,7 +20,6 @@ const SideNavigation: React.FC = () => {
         const section = document.getElementById(item.id);
         if (section) {
           const rect = section.getBoundingClientRect();
-          // Consider section active if its middle part is in the viewport
           if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
             currentSection = item.id;
             break;
@@ -36,16 +35,8 @@ const SideNavigation: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [activeSection]);
 
-  const scrollToSection = (id: string) => {
-    scroller.scrollTo(id, {
-      duration: 800,
-      delay: 0,
-      smooth: 'easeInOutQuart',
-    });
-  };
-
   return (
-    <nav className="fixed left-0 top-1/2 -translate-y-1/2 p-4 hidden md:flex flex-col space-y-6 z-50 font-inter"> {/* Using font-inter */}
+    <nav className="fixed right-12 top-1/2 -translate-y-1/2 hidden md:flex flex-col space-y-6 z-50">
       {navItems.map((item) => (
         <ScrollLink
           key={item.id}
@@ -54,14 +45,14 @@ const SideNavigation: React.FC = () => {
           duration={800}
           spy={true}
           onSetActive={() => setActiveSection(item.id)}
-          className="relative cursor-pointer group flex items-center"
-          onClick={() => scrollToSection(item.id)}
+          className="relative cursor-pointer group flex items-center justify-end"
         >
-          <span className={`h-0.5 w-4 bg-white mr-3 transition-all duration-300 ${activeSection === item.id ? 'w-8' : 'w-4 group-hover:w-6'}`}></span> {/* Subtle line indicator */}
-          <span className={`text-lg font-medium transition-colors duration-300 uppercase
-            ${activeSection === item.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+          <span className={`text-xs md:text-sm font-mono uppercase tracking-[0.2em] mr-6 transition-all duration-300 opacity-0 group-hover:opacity-100 font-bold ${activeSection === item.id ? 'opacity-100 text-white translate-x-0' : 'text-white/40 translate-x-2'}`}>
             {item.label}
           </span>
+          <div className={`h-12 w-[2px] bg-white/10 transition-all duration-500 relative overflow-hidden`}>
+             <div className={`absolute top-0 left-0 w-full h-full bg-white transition-transform duration-500 origin-top ${activeSection === item.id ? 'scale-y-100' : 'scale-y-0'}`}></div>
+          </div>
         </ScrollLink>
       ))}
     </nav>

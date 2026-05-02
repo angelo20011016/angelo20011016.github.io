@@ -1,26 +1,33 @@
 "use client";
 
 import React from 'react';
-import PortfolioCarousel from './PortfolioCarousel';
-import { ScrollReveal } from '../common/ScrollReveal';
+import PortfolioList from './PortfolioList';
+import { motion } from 'framer-motion';
 
 const PortfolioSection: React.FC = () => {
   return (
-    <section id="portfolio" className="relative min-h-screen w-full flex flex-col items-center justify-center p-8 md:p-16 bg-transparent text-white overflow-hidden">
-      <ScrollReveal className="w-full flex justify-center">
-        <h2 className="relative z-10 font-mono text-5xl md:text-7xl font-bold mb-16 tracking-wide text-center">
-          我的作品集
-        </h2>
-      </ScrollReveal>
-      
-      <ScrollReveal className="w-full" delay={0.4}>
-        <div className="relative z-10 w-full">
-          <PortfolioCarousel />
+    <section id="portfolio" className="relative min-h-screen w-full flex flex-col pt-32 pb-20 bg-background text-white">
+      <div className="px-8 mb-20">
+        <div className="mask-reveal">
+           <motion.h2 
+             initial={{ y: "100%" }}
+             whileInView={{ y: "0%" }}
+             transition={{ duration: 1, ease: [0.25, 1, 0.5, 1] }}
+             className="text-[10vw] font-mono font-bold uppercase tracking-tighter leading-none"
+           >
+             Selected Work
+           </motion.h2>
         </div>
-      </ScrollReveal>
+        <div className="flex justify-end mt-4">
+           <p className="max-w-xs text-white/60 font-mono text-sm uppercase tracking-widest text-right">
+             A collection of projects exploring the intersection of design, code, and interaction.
+           </p>
+        </div>
+      </div>
+      
+      <PortfolioList />
     </section>
   );
 };
 
 export default PortfolioSection;
-
