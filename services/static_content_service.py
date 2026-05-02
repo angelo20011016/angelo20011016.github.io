@@ -1,6 +1,7 @@
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from models.hero_settings import HeroSettings
+from models.site_settings import SiteSettings
 from bson import ObjectId
 from fastapi import Depends
 from services.db_service import get_database
@@ -42,6 +43,37 @@ class StaticContentService:
         if updated_doc:
             return HeroSettings.parse_obj(updated_doc)
         return None # Should ideally not happen if get_hero_settings creates it
+
+    async def get_site_settings(self) -> SiteSettings:
+        settings_doc = await self.collection.find_one({"settings_id": "site_settings"})
+        if settings_doc:
+            return SiteSettings.parse_obj(settings_doc)
+        else:
+            default_settings = SiteSettings(
+                contact_email="angelo@example.com",
+                contact_phone="+886 912 345 678",
+                contact_location="Taipei, Taiwan",
+                social_github="https://github.com/angeloange?tab=repositories",
+                social_instagram="https://www.instagram.com/angelo__1016/",
+                social_youtube="https://www.youtube.com/@Happywecan",
+                portfolio_title="Selected Work",
+                portfolio_subtitle="A collection of projects exploring the intersection of design, code, and interaction.",
+                blog_title="Insights"
+            )
+            inserted_id = await self.collection.insert_one(default_settings.dict(by_alias=True))
+            default_settings.id = inserted_id.inserted_id
+            return default_settings
+
+    async def update_site_settings(self, settings: SiteSettings) -> SiteSettings:
+        updated_doc = await self.collection.find_one_and_update(
+            {"settings_id": "site_settings"},
+            {"$set": settings.dict(by_alias=True, exclude={"id"})},
+            return_document=True,
+            upsert=True
+        )
+        if updated_doc:
+            return SiteSettings.parse_obj(updated_doc)
+        return None
 
 
 # Dependency to get the StaticContentService

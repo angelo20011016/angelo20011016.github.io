@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroContentForm from '@/components/admin/HeroContentForm';
+import SiteSettingsForm from '@/components/admin/SiteSettingsForm';
 import PortfolioManager from '@/components/admin/PortfolioManager';
 import BlogManager from '@/components/admin/BlogManager';
 import SkillManager from '@/components/admin/SkillManager';
@@ -53,6 +54,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        <SiteSettingsForm />
         <HeroContentForm />
         <PortfolioManager />
         <BlogManager />

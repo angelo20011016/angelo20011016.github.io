@@ -1,10 +1,25 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PortfolioList from './PortfolioList';
 import { motion } from 'framer-motion';
+import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
 
 const PortfolioSection: React.FC = () => {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Failed to load site settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <section id="portfolio" className="relative min-h-screen w-full flex flex-col pt-32 pb-20 bg-background text-white">
       <div className="px-8 mb-20">
@@ -15,12 +30,12 @@ const PortfolioSection: React.FC = () => {
              transition={{ duration: 1, ease: [0.25, 1, 0.5, 1] }}
              className="text-[10vw] font-mono font-bold uppercase tracking-tighter leading-none"
            >
-             Selected Work
+             {settings?.portfolio_title || "Selected Work"}
            </motion.h2>
         </div>
         <div className="flex justify-end mt-4">
            <p className="max-w-xs text-white/60 font-mono text-sm uppercase tracking-widest text-right">
-             A collection of projects exploring the intersection of design, code, and interaction.
+             {settings?.portfolio_subtitle || "A collection of projects exploring the intersection of design, code, and interaction."}
            </p>
         </div>
       </div>

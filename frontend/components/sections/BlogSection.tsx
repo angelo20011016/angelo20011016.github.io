@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import DetailModal from '../common/DetailModal';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../../services/authService';
+import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
 
 interface BlogPostItem {
   id: string;
@@ -27,6 +28,19 @@ const BlogSection: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<BlogPostItem | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPostItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Failed to load site settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -73,7 +87,7 @@ const BlogSection: React.FC = () => {
            transition={{ duration: 1, ease: [0.25, 1, 0.5, 1] }}
            className="text-[10vw] font-mono font-bold uppercase tracking-tighter leading-none"
          >
-           Insights
+           {settings?.blog_title || "Insights"}
          </motion.h2>
       </div>
 

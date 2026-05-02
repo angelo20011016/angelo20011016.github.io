@@ -31,6 +31,20 @@ async function getErrorMessage(response: Response, fallback: string): Promise<st
   }
 }
 
+export interface SiteSettings {
+  _id?: string;
+  settings_id: string;
+  contact_email: string;
+  contact_phone: string;
+  contact_location: string;
+  social_github: string;
+  social_instagram: string;
+  social_youtube: string;
+  portfolio_title: string;
+  portfolio_subtitle: string;
+  blog_title: string;
+}
+
 /**
  * Fetches the Hero section settings from the backend.
  * @returns A Promise that resolves to HeroSettings.
@@ -73,6 +87,40 @@ export async function updateHeroSettings(settings: HeroSettings, token: string):
 
   if (!response.ok) {
     throw new Error(await getErrorMessage(response, 'Failed to update hero settings'));
+  }
+
+  return response.json();
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const response = await fetch(`${API_BASE_URL}/api/settings/site`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to fetch site settings');
+  }
+
+  return response.json();
+}
+
+export async function updateSiteSettings(settings: SiteSettings, token: string): Promise<SiteSettings> {
+  const response = await fetch(`${API_BASE_URL}/api/settings/site`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(settings),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to update site settings');
   }
 
   return response.json();

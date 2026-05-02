@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.hero_settings import HeroSettings
+from models.site_settings import SiteSettings
 from services.static_content_service import StaticContentService, get_static_content_service
 from services.auth_service import get_current_admin_user # For admin authentication
 
@@ -44,3 +45,36 @@ async def update_hero_section_settings(
             detail="Failed to update Hero settings."
         )
     return updated_settings
+
+@router.get("/settings/site", response_model=SiteSettings, summary="Get Site Settings")
+async def get_site_settings(
+    static_content_service: StaticContentService = Depends(get_static_content_service)
+):
+    settings = await static_content_service.get_site_settings()
+    if not settings:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Site settings not found and could not be created."
+        )
+    return settings
+
+@router.put("/settings/site", response_model=SiteSettings, summary="Update Site Settings")
+async def update_site_settings(
+    site_settings: SiteSettings,
+    static_content_service: StaticContentService = Depends(get_static_content_service),
+    current_admin_user: dict = Depends(get_current_admin_user)
+):
+    if site_settings.settings_id != "site_settings":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid settings_id. Only 'site_settings' is allowed."
+        )
+    
+    updated_settings = await static_content_service.update_site_settings(site_settings)
+    if not updated_settings:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update Site settings."
+        )
+    return updated_settings
+

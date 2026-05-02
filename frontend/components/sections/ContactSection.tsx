@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Magnetic from '../common/Magnetic';
 import { API_BASE_URL } from '../../services/authService';
+import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
 
 const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -13,6 +14,7 @@ const ContactSection: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [localTime, setLocalTime] = useState('');
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
     const updateLocalTime = () => {
@@ -28,6 +30,18 @@ const ContactSection: React.FC = () => {
     const intervalId = window.setInterval(updateLocalTime, 60_000);
 
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Failed to load site settings:", err);
+      }
+    };
+    fetchSettings();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,13 +97,13 @@ const ContactSection: React.FC = () => {
             <div className="space-y-12">
               <div className="space-y-4">
                 <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">Get in touch</p>
-                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">angelo@example.com</p>
-                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">+886 912 345 678</p>
+                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">{settings?.contact_email || 'angelo@example.com'}</p>
+                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">{settings?.contact_phone || '+886 912 345 678'}</p>
               </div>
               
               <div className="space-y-4">
                 <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">Location</p>
-                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">Taipei, Taiwan</p>
+                <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">{settings?.contact_location || 'Taipei, Taiwan'}</p>
               </div>
             </div>
 
@@ -161,9 +175,9 @@ const ContactSection: React.FC = () => {
           <div className="flex flex-col gap-6">
             <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">Socials</p>
             <div className="flex flex-wrap gap-8 md:gap-12 font-mono text-lg md:text-xl uppercase tracking-[0.1em]">
-              <a href="https://github.com/angeloange?tab=repositories" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">GitHub</a>
-              <a href="https://www.instagram.com/angelo__1016/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">Instagram</a>
-              <a href="https://www.youtube.com/@Happywecan" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">YouTube</a>
+              <a href={settings?.social_github || "https://github.com/angeloange?tab=repositories"} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">GitHub</a>
+              <a href={settings?.social_instagram || "https://www.instagram.com/angelo__1016/"} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">Instagram</a>
+              <a href={settings?.social_youtube || "https://www.youtube.com/@Happywecan"} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">YouTube</a>
             </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4 md:gap-16 font-mono text-sm md:text-base uppercase tracking-[0.1em] text-white/40">
