@@ -7,7 +7,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
  * @param password - The user's password.
  * @returns The access token and token type.
  */
-export async function login(email, password) {
+export async function login(email: string, password: string) {
   const params = new URLSearchParams();
   params.append('username', email);
   params.append('password', password);
@@ -34,7 +34,7 @@ export async function login(email, password) {
  * @param token - The JWT access token.
  * @returns The user's profile information.
  */
-export async function getAdminProfile(token) {
+export async function getAdminProfile(token: string) {
   const response = await fetch(`${API_BASE_URL}/api/admin/me`, {
     method: 'GET',
     headers: {

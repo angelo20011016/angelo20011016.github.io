@@ -6,7 +6,7 @@ import { faCode, faServer, faHandshake, faChartLine, faQuestionCircle } from '@f
 import { getSkills, Skill } from '../../services/skillService'; // Import service and type
 
 // Icon map to dynamically render icons based on string from DB
-const iconMap = {
+const iconMap: Record<string, any> = {
   faCode,
   faServer,
   faHandshake,

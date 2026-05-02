@@ -28,7 +28,7 @@ interface PortfolioFormProps {
 }
 
 // Sub-component for handling image uploads (could be moved to a shared file)
-const ImageUploadField = ({ label, value, name, onUrlChange }) => {
+const ImageUploadField = ({ label, value, name, onUrlChange }: { label: string, value?: string, name: string, onUrlChange: (name: string, url: string) => void }) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

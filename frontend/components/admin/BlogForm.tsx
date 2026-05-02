@@ -9,7 +9,7 @@ import { API_BASE_URL } from '../../services/authService';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 // Sub-component for handling image uploads (copied for now, consider sharing later)
-const ImageUploadField = ({ label, value, name, onUrlChange }) => {
+const ImageUploadField = ({ label, value, name, onUrlChange }: { label: string, value?: string, name: string, onUrlChange: (name: string, url: string) => void }) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
