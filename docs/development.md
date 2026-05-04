@@ -2,6 +2,8 @@
 
 This project can be developed from multiple machines while sharing one MongoDB test database on the Mac mini server.
 
+For Codex handoff on another machine, read `docs/codex-handoff.md` first.
+
 ## Environment Layout
 
 ```text
