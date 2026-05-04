@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import '@splidejs/react-splide/css'; // Default theme for Splide
 import DetailModal from '../common/DetailModal'; // Import DetailModal
-import Image from 'next/image';
+import { API_BASE_URL } from '../../services/authService';
 
 interface PortfolioItem {
   id: string;
@@ -17,8 +17,12 @@ interface PortfolioItem {
   created_at?: string;
 }
 
-// Define the base URL for the API. Use environment variables for production.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+function getAssetUrl(url: string): string {
+  if (!url) return '/placeholder.svg';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/static/')) return `${API_BASE_URL}${url}`;
+  return `${API_BASE_URL}${url}`;
+}
 
 const PortfolioCarousel: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,12 +43,12 @@ const PortfolioCarousel: React.FC = () => {
         // Prepend the API base URL to each image_url
         const itemsWithFullImageUrls = data.map(item => ({
           ...item,
-          image_url: item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`
+          image_url: getAssetUrl(item.image_url)
         }));
         setPortfolioItems(itemsWithFullImageUrls);
 
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to fetch portfolio items');
       } finally {
         setLoading(false);
       }

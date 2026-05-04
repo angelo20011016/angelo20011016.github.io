@@ -14,27 +14,44 @@ const HeroSection: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const containerRef = useRef(null);
-  const titleRow1 = useRef(null);
-  const titleRow2 = useRef(null);
   const subtitleRef = useRef(null);
   const photoRef = useRef(null);
 
+  const titleParts = settings?.hero_main_title.trim().split(/\s+/).filter(Boolean) ?? [];
+  const titleFirstLine = titleParts[0] || "DEVELOPER";
+  const titleSecondLine = titleParts.slice(1).join(' ') || "DEVELOPER";
+
+  const getHeroImageUrl = (url?: string) => {
+    if (!url) return "";
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/static/')) return `${API_BASE_URL}${url}`;
+    return url;
+  };
+
   useEffect(() => {
+    let isMounted = true;
+
     const fetchSettings = async () => {
       try {
         const data = await getHeroSettings();
-        if (data.hero_personal_photo_url && !data.hero_personal_photo_url.startsWith('http')) {
-          data.hero_personal_photo_url = `${API_BASE_URL}${data.hero_personal_photo_url}`;
+        data.hero_personal_photo_url = getHeroImageUrl(data.hero_personal_photo_url);
+        if (isMounted) {
+          setSettings(data);
         }
-        setSettings(data);
       } catch (err) {
         console.error("Failed to load hero settings:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchSettings();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -62,11 +79,11 @@ const HeroSection: React.FC = () => {
   if (!settings) return null;
 
   return (
-    <section id="hero" ref={containerRef} className="relative min-h-screen w-full flex flex-col justify-center items-center px-8 overflow-hidden bg-background">
+    <section id="hero" ref={containerRef} className="relative min-h-screen w-full flex flex-col justify-center items-center px-5 sm:px-8 overflow-hidden bg-background">
       {/* Background Photo (Dennis Style: Subtle, maybe off-center) */}
       <div ref={photoRef} className="absolute right-[10%] top-[20%] w-[30vw] h-[40vw] opacity-0 pointer-events-none">
          <Image 
-            src={settings.hero_personal_photo_url || "/placeholder.jpg"}
+            src={settings.hero_personal_photo_url || "/placeholder.svg"}
             alt="Hero Background"
             fill
             className="object-cover grayscale hover:grayscale-0 transition-all duration-1000"
@@ -74,29 +91,29 @@ const HeroSection: React.FC = () => {
          />
       </div>
 
-      <div className="z-10 w-full max-w-7xl mx-auto flex flex-col items-start space-y-4">
-        <div className="mask-reveal">
-           <h1 className="mask-reveal-inner text-[12vw] leading-[0.9] font-mono font-bold uppercase tracking-tighter">
-             {settings.hero_main_title.split(' ')[0] || "DEVELOPER"}
+      <div className="z-10 w-full flex flex-col items-start space-y-3 sm:space-y-4">
+        <div className="mask-reveal w-full">
+           <h1 className="mask-reveal-inner max-w-full text-[clamp(4rem,12vw,12rem)] leading-[0.9] font-mono font-bold uppercase tracking-normal whitespace-nowrap">
+             {titleFirstLine}
            </h1>
         </div>
-        <div className="mask-reveal">
-           <h1 className="mask-reveal-inner text-[12vw] leading-[0.9] font-mono font-bold uppercase tracking-tighter ml-[10vw]">
-             {settings.hero_main_title.split(' ').slice(1).join(' ') || "& DESIGNER"}
+        <div className="mask-reveal w-full">
+           <h1 className="mask-reveal-inner max-w-full text-[clamp(3.25rem,10.5vw,10.5rem)] leading-[0.9] font-mono font-bold uppercase tracking-normal whitespace-nowrap">
+             {titleSecondLine}
            </h1>
         </div>
 
-        <div ref={subtitleRef} className="flex flex-col md:flex-row md:items-end justify-between w-full mt-12 space-y-8 md:space-y-0">
+        <div ref={subtitleRef} className="flex flex-col md:flex-row md:items-center w-full mt-12 gap-8 md:gap-64">
           <p className="max-w-md text-xl text-white/70 font-inter uppercase tracking-widest leading-relaxed">
-            {settings.hero_subtitle} — Based in Taiwan, creating premium digital experiences with a focus on motion and interaction.
+            {settings.hero_subtitle || "Based in Taiwan, creating premium digital experiences with a focus on motion and interaction."}
           </p>
           
-          <div className="flex space-x-12 items-center">
+          <div className="flex items-center">
             <Magnetic>
               <ScrollLink
                 to="portfolio"
                 smooth={true}
-                className="w-44 h-44 bg-primary rounded-full flex items-center justify-center text-white font-mono uppercase text-sm tracking-widest cursor-pointer hover:scale-105 transition-transform"
+                className="w-28 h-28 md:w-32 md:h-32 bg-primary rounded-full flex items-center justify-center text-white font-mono uppercase text-[0.65rem] md:text-xs tracking-widest cursor-pointer hover:scale-105 transition-transform"
                 data-cursor-text="Work"
               >
                 View Work

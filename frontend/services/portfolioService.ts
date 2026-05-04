@@ -1,5 +1,13 @@
-// Note: In a real application, the API base URL should be in an environment variable.
-const API_BASE_URL = 'http://127.0.0.1:8000';
+import { API_BASE_URL } from './authService';
+
+interface PortfolioPayload {
+  title: string;
+  description: string;
+  image_url: string;
+  content: string;
+  links?: { label: string; url: string }[];
+  tags?: string[];
+}
 
 /**
  * Fetches all portfolio items.
@@ -26,7 +34,7 @@ export async function getPortfolioItems() {
  * @param item - The portfolio item data to create.
  * @param token - The JWT access token.
  */
-export async function createPortfolioItem(item: Omit<any, 'id'>, token: string) {
+export async function createPortfolioItem(item: PortfolioPayload, token: string) {
     const response = await fetch(`${API_BASE_URL}/api/portfolio`, {
         method: 'POST',
         headers: {
@@ -51,7 +59,7 @@ export async function createPortfolioItem(item: Omit<any, 'id'>, token: string) 
  * @param item - The portfolio item data to update.
  * @param token - The JWT access token.
  */
-export async function updatePortfolioItem(id: string, item: Omit<any, 'id'>, token: string) {
+export async function updatePortfolioItem(id: string, item: PortfolioPayload, token: string) {
     const response = await fetch(`${API_BASE_URL}/api/portfolio/${id}`, {
         method: 'PUT',
         headers: {

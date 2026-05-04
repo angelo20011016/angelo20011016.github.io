@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+logs
+frontend/.next
+frontend/node_modules
+frontend/frontend
+frontend_backup
+node_modules
+npm-debug.log*
+Dockerfile
+docker-compose*.yml

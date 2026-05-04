@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRocket, faNewspaper, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { API_BASE_URL } from '../../services/authService';
 
 const VisionAndNewsletter: React.FC = () => {
   const sectionRef = useRef(null);
@@ -70,7 +71,7 @@ const VisionAndNewsletter: React.FC = () => {
     setStatusMessage(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/subscribe', {
+      const response = await fetch(`${API_BASE_URL}/api/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

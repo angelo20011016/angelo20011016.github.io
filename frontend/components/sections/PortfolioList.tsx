@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import DetailModal from '../common/DetailModal';
+import { API_BASE_URL } from '../../services/authService';
 
 interface PortfolioItem {
   id: string;
@@ -16,7 +17,12 @@ interface PortfolioItem {
   created_at?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+function getAssetUrl(url: string): string {
+  if (!url) return '/placeholder.svg';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/static/')) return `${API_BASE_URL}${url}`;
+  return `${API_BASE_URL}${url}`;
+}
 
 const PortfolioList: React.FC = () => {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
@@ -26,6 +32,8 @@ const PortfolioList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchPortfolio = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/portfolio`);
@@ -33,16 +41,27 @@ const PortfolioList: React.FC = () => {
         const data: PortfolioItem[] = await response.json();
         const itemsWithFullImageUrls = data.map(item => ({
           ...item,
-          image_url: item.image_url.startsWith('http') ? item.image_url : `${API_BASE_URL}${item.image_url}`
+          image_url: getAssetUrl(item.image_url)
         }));
-        setPortfolioItems(itemsWithFullImageUrls);
-      } catch (e) {
-        console.error(e);
+        if (isMounted) {
+          setPortfolioItems(itemsWithFullImageUrls);
+        }
+      } catch {
+        if (isMounted) {
+          setPortfolioItems([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchPortfolio();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) return <div className="text-white text-center py-20 font-mono uppercase tracking-widest">Loading Projects...</div>;

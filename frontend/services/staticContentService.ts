@@ -12,24 +12,46 @@ export interface HeroSettings {
   hero_button_2_label: string;
 }
 
+export const DEFAULT_HERO_SETTINGS: HeroSettings = {
+  settings_id: 'hero_settings',
+  hero_personal_photo_url: '/placeholder.jpg',
+  hero_main_title: 'Angelo Developer',
+  hero_subtitle: 'Creative Developer',
+  hero_bio_content: 'Based in Taiwan, creating premium digital experiences with a focus on motion and interaction.',
+  hero_button_1_label: 'View Work',
+  hero_button_2_label: 'Contact Me',
+};
+
+async function getErrorMessage(response: Response, fallback: string): Promise<string> {
+  try {
+    const errorData = await response.json();
+    return errorData.detail || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 /**
  * Fetches the Hero section settings from the backend.
  * @returns A Promise that resolves to HeroSettings.
  */
 export async function getHeroSettings(): Promise<HeroSettings> {
-  const response = await fetch(`${API_BASE_URL}/api/settings/hero`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/settings/hero`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to fetch hero settings');
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to fetch hero settings'));
+    }
+
+    return response.json();
+  } catch {
+    return DEFAULT_HERO_SETTINGS;
   }
-
-  return response.json();
 }
 
 /**
@@ -50,8 +72,7 @@ export async function updateHeroSettings(settings: HeroSettings, token: string):
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to update hero settings');
+    throw new Error(await getErrorMessage(response, 'Failed to update hero settings'));
   }
 
   return response.json();

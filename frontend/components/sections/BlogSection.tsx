@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import DetailModal from '../common/DetailModal';
 import { motion } from 'framer-motion';
+import { API_BASE_URL } from '../../services/authService';
 
 interface BlogPostItem {
   id: string;
@@ -16,6 +17,11 @@ interface BlogPostItem {
   subtitle?: string;
 }
 
+function getAssetUrl(url?: string): string | undefined {
+  if (!url || url.startsWith('http')) return url;
+  return `${API_BASE_URL}${url}`;
+}
+
 const BlogSection: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<BlogPostItem | null>(null);
@@ -23,24 +29,37 @@ const BlogSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchBlogPosts = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/blog?publishedOnly=true');
+        const response = await fetch(`${API_BASE_URL}/api/blog?publishedOnly=true`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data: BlogPostItem[] = await response.json();
         const formattedData = data.map(post => ({
           ...post,
-          imageUrl: post.imageUrl || post.cover_image,
+          imageUrl: getAssetUrl(post.imageUrl || post.cover_image),
           description: post.description || post.subtitle,
         }));
-        setBlogPosts(formattedData);
-      } catch (e) {
-        console.error(e);
+        if (isMounted) {
+          setBlogPosts(formattedData);
+        }
+      } catch {
+        if (isMounted) {
+          setBlogPosts([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchBlogPosts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) return null;
@@ -59,7 +78,7 @@ const BlogSection: React.FC = () => {
       </div>
 
       <div className="w-full max-w-7xl mx-auto flex flex-col border-t border-white/10">
-        {blogPosts.map((post, index) => (
+        {blogPosts.map((post) => (
           <div
             key={post.id}
             onClick={() => {

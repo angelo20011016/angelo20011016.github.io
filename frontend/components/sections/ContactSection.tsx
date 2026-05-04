@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Magnetic from '../common/Magnetic';
+import { API_BASE_URL } from '../../services/authService';
 
 const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -11,6 +12,23 @@ const ContactSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [localTime, setLocalTime] = useState('');
+
+  useEffect(() => {
+    const updateLocalTime = () => {
+      setLocalTime(new Date().toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Taipei',
+      }));
+    };
+
+    updateLocalTime();
+    const intervalId = window.setInterval(updateLocalTime, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +36,7 @@ const ContactSection: React.FC = () => {
     setStatusMessage(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/contactme', {
+      const response = await fetch(`${API_BASE_URL}/api/contactme`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, message }),
@@ -33,7 +51,7 @@ const ContactSection: React.FC = () => {
         setIsSuccess(false);
         setStatusMessage(data.detail || 'ERROR');
       }
-    } catch (error) {
+    } catch {
       setIsSuccess(false);
       setStatusMessage('SERVER ERROR');
     } finally {
@@ -79,7 +97,7 @@ const ContactSection: React.FC = () => {
             <div className="w-full">
               <form onSubmit={handleSubmit} className="space-y-12">
                 <div className="space-y-2">
-                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">01 / What's your name?</label>
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">01 / What&apos;s your name?</label>
                   <input
                     type="text"
                     placeholder="NAME"
@@ -91,7 +109,7 @@ const ContactSection: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">02 / What's your email?</label>
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">02 / What&apos;s your email?</label>
                   <input
                     type="email"
                     placeholder="EMAIL"
@@ -157,7 +175,7 @@ const ContactSection: React.FC = () => {
         <div className="text-left md:text-right flex flex-col gap-6">
           <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">Local Time</p>
           <p className="font-mono text-xl md:text-2xl uppercase tracking-widest">
-            {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })} TPE
+            {localTime ? `${localTime} TPE` : 'TPE'}
           </p>
         </div>
       </div>

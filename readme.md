@@ -1,5 +1,35 @@
 # MichelAngelo 個人網站
 
+## Docker Development
+
+Use Docker Compose when switching between macOS and Windows so Node, Python, MongoDB, ports, and environment variables stay consistent.
+
+Start frontend and backend:
+
+```bash
+docker compose up -d --build
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+Local URLs:
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8001
+- MongoDB: uses `MONGODB_URI` from `.env`, for example MongoDB Atlas
+
+The Docker frontend profile sets `NEXT_PUBLIC_API_URL=http://localhost:8001`, so browser requests avoid any other local service already using port `8000`. If running frontend locally, set the same value in `frontend/.env.local`.
+
+Stop services:
+
+```bash
+docker compose down
+```
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-green.svg)
 ![Flask](https://img.shields.io/badge/Flask-2.0+-orange.svg)
