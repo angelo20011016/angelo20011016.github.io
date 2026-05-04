@@ -53,46 +53,46 @@ The container should be listed as:
 homelab-mongodb-test
 ```
 
-## Windows Development
+## Start The App On Any Development Machine
 
-From PowerShell:
+Use the same Docker Compose flow on Windows and MacBook.
+
+Windows PowerShell:
 
 ```powershell
 cd D:\projects\angelo20011016.github.io
-.\scripts\dev-windows.ps1
+docker compose up -d --build
 ```
 
-Backend:
-
-```text
-http://localhost:8000
-```
-
-Frontend:
-
-```text
-http://localhost:3000
-```
-
-## MacBook Development
-
-From Terminal:
+MacBook Terminal:
 
 ```bash
 cd ~/path/to/angelo20011016.github.io
-sh scripts/dev-mac.sh
-```
-
-Backend:
-
-```text
-http://localhost:8000
+docker compose up -d --build
 ```
 
 Frontend:
 
 ```text
 http://localhost:3000
+```
+
+Backend:
+
+```text
+http://localhost:8001
+```
+
+Check backend logs:
+
+```bash
+docker compose logs -f backend
+```
+
+Stop the app:
+
+```bash
+docker compose down
 ```
 
 ## First Setup On Another Machine
@@ -100,31 +100,37 @@ http://localhost:3000
 1. Clone or pull the repo.
 2. Copy `.env.example` to `.env`.
 3. Fill in local secrets, especially `MONGODB_URI`.
-4. Install backend dependencies.
-5. Install frontend dependencies.
-6. Start with the matching script for the machine.
+4. Install Docker Desktop.
+5. Start with Docker Compose.
 
 Windows:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-cd frontend
-npm install
-cd ..
-.\scripts\dev-windows.ps1
+git pull
+copy .env.example .env
+notepad .env
+docker compose up -d --build
 ```
 
 MacBook:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r requirements.txt
-cd frontend
-npm install
-cd ..
-sh scripts/dev-mac.sh
+git pull
+cp .env.example .env
+nano .env
+docker compose up -d --build
+```
+
+Frontend:
+
+```text
+http://localhost:3000
+```
+
+Backend:
+
+```text
+http://localhost:8001
 ```
 
 ## Refresh Test Data
