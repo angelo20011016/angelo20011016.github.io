@@ -28,7 +28,7 @@ async def connect_to_mongo():
         print("\n🔴 FATAL ERROR: MONGODB_URI not set for database connection in db_service.", file=sys.stderr)
         sys.exit(1)
     
-    print(f"DEBUG (db_service): Attempting to connect to MongoDB with URI: {mongo_uri[:20]}...")
+    print("DEBUG (db_service): Attempting to connect to MongoDB...")
     try:
         _mongo_client_instance = AsyncIOMotorClient(mongo_uri)
         _db_instance = _mongo_client_instance.get_database()
