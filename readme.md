@@ -4,6 +4,8 @@
 
 Use Docker Compose when switching between macOS and Windows so Node, Python, MongoDB, ports, and environment variables stay consistent.
 
+For normal multi-machine development with Windows/MacBook using the Mac mini test MongoDB, see `docs/development.md`.
+
 Start frontend and backend:
 
 ```bash
