@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as SolidIcons from '@fortawesome/free-solid-svg-icons'; // Import all icons
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { getHobbies, Hobby } from '../../services/hobbyService';
 import { ScrollReveal } from '../common/ScrollReveal';
 
@@ -26,51 +27,72 @@ const HobbiesSection: React.FC = () => {
 
   // Helper to get icon object from string name
   const getIcon = (iconName: string) => {
-    const icon = (SolidIcons as any)[iconName];
-    return icon || SolidIcons.faQuestionCircle;
+    const icon = SolidIcons[iconName as keyof typeof SolidIcons];
+    return (icon || SolidIcons.faQuestionCircle) as IconDefinition;
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-16 px-8 text-white flex flex-col items-center">
-      <ScrollReveal className="w-full flex justify-center">
-        <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">
-          工作之外的我
-        </h2>
-      </ScrollReveal>
+    <section id="hobbies" className="w-full bg-background px-5 pb-24 text-white sm:px-8 lg:pb-32">
+      <div className="mx-auto max-w-7xl border-t border-white/10 pt-16">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <ScrollReveal>
+            <div>
+              <p className="mb-6 font-mono text-xs uppercase tracking-[0.28em] text-white/40">Outside work</p>
+              <h2 className="text-[clamp(2.75rem,7vw,6.5rem)] font-bold uppercase leading-[0.92] tracking-normal">
+                Built by more than code.
+              </h2>
+            </div>
+          </ScrollReveal>
 
-      <ScrollReveal className="w-full flex justify-center" delay={0.2}>
-        <div className="text-lg md:text-xl text-gray-300 font-inter leading-relaxed mb-16 text-center max-w-2xl">
-          <p className="mb-6">
-            平時也積極培養其他興趣愛好，相信休息是為了走更長遠的路，也把自律正直視為值得用一生貫徹的價值觀。
-          </p>
-          <p>
-            未來也計畫分享相關題材的文章，來幫助有興趣但卻不知道如何開始的朋友們，Happy we can!
-          </p>
+          <ScrollReveal delay={0.15}>
+            <div className="max-w-2xl text-lg leading-8 text-white/60 md:text-xl md:leading-9">
+              <p className="mb-6">
+                工作之外的興趣是網站裡很重要的人味：它讓作品集不只展示技能，也展示你如何學習、維持節奏、累積長期輸出。
+              </p>
+              <p>
+                之後這裡可以延伸到文章主題，像是自律、健身、咖啡、攝影或生活紀錄，讓技術內容旁邊有更完整的個人輪廓。
+              </p>
+            </div>
+          </ScrollReveal>
         </div>
-      </ScrollReveal>
 
-      {loading ? (
-        <div className="text-gray-500">Loading hobbies...</div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full">
-          {hobbies.length > 0 ? (
+        {loading ? (
+          <div className="py-16 font-mono text-sm uppercase tracking-[0.2em] text-white/40">Loading hobbies...</div>
+        ) : (
+          <div className="mt-16 grid border-l border-white/10 sm:grid-cols-2 lg:grid-cols-4">
+            {hobbies.length > 0 ? (
               hobbies.map((hobby, index) => (
-                <ScrollReveal key={hobby.id || index} delay={0.3 + (index * 0.1)} className="flex flex-col items-center group w-full">
-                  <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4 transition-all duration-300 group-hover:bg-white group-hover:text-black shadow-lg cursor-pointer">
-                    <FontAwesomeIcon icon={getIcon(hobby.icon)} className="text-3xl text-gray-300 group-hover:text-black transition-colors duration-300" />
+                <ScrollReveal
+                  key={hobby.id || index}
+                  delay={0.2 + index * 0.06}
+                  className="group min-h-[240px] border-b border-r border-white/10 p-6 transition-colors duration-300 hover:bg-[#f2f0ea] hover:text-black sm:p-8"
+                >
+                  <div className="mb-10 flex items-start justify-between">
+                    <FontAwesomeIcon
+                      icon={getIcon(hobby.icon)}
+                      className="text-2xl text-white/50 transition-colors duration-300 group-hover:text-black/60"
+                    />
+                    <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/35 transition-colors duration-300 group-hover:text-black/40">
+                      0{index + 1}
+                    </span>
                   </div>
-                  <h3 className="font-bold text-xl mb-1">{hobby.name}</h3>
+                  <h3 className="text-2xl font-bold uppercase leading-tight tracking-normal">{hobby.name}</h3>
                   {hobby.description && (
-                      <span className="text-xs text-gray-500 text-center">{hobby.description}</span>
+                    <p className="mt-5 leading-7 text-white/50 transition-colors duration-300 group-hover:text-black/60">
+                      {hobby.description}
+                    </p>
                   )}
                 </ScrollReveal>
               ))
-          ) : (
-             <div className="col-span-full text-center text-gray-500">暫無興趣資料</div>
-          )}
-        </div>
-      )}
-    </div>
+            ) : (
+              <div className="col-span-full border-b border-r border-white/10 p-8 font-mono text-sm uppercase tracking-[0.2em] text-white/35">
+                暫無興趣資料
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 };
 

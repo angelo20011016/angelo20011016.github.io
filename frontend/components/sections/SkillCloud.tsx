@@ -1,23 +1,52 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCode, faServer, faHandshake, faChartLine, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { getSkills, Skill } from '../../services/skillService'; // Import service and type
+import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
 
 // Icon map to dynamically render icons based on string from DB
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, IconDefinition> = {
   faCode,
   faServer,
   faHandshake,
   faChartLine,
 };
 
+const getCategoryDescription = (main: string, settings?: SiteSettings | null) => {
+  const categoryCopy: Record<string, string | undefined> = {
+    frontend: settings?.skills_frontend_description,
+    backend: settings?.skills_backend_description,
+    collaboration: settings?.skills_collaboration_description,
+    analytics: settings?.skills_analytics_description,
+  };
+  const key = main.toLowerCase();
+  return categoryCopy[key] || settings?.skills_default_description || "Tools and practices used to turn ideas into maintainable shipped work.";
+};
+
+const proficiencyByCategory: Record<string, number> = {
+  frontend: 92,
+  backend: 82,
+  collaboration: 76,
+  analytics: 68,
+};
+
+const getProficiency = (main: string) => {
+  const key = main.toLowerCase();
+  return proficiencyByCategory[key] ?? 72;
+};
+
 const SkillCloud: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
+  const coreStack = (settings?.skills_core_stack || "Next.js, React, TypeScript, FastAPI, MongoDB, Docker")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   useEffect(() => {
     const fetchSkills = async () => {
@@ -25,7 +54,7 @@ const SkillCloud: React.FC = () => {
         setLoading(true);
         const data = await getSkills();
         setSkills(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError("Failed to load skills.");
         console.error(err);
       } finally {
@@ -35,60 +64,106 @@ const SkillCloud: React.FC = () => {
     fetchSkills();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="mt-20 w-full max-w-5xl text-center">
-        <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">我的技能樹</h2>
-        <p className="text-gray-400">Loading skills...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="mt-20 w-full max-w-5xl text-center">
-        <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">我的技能樹</h2>
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getSiteSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error("Failed to load skills settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   return (
-    <div className="mt-20 w-full max-w-5xl">
-      <h2 className="font-mono text-4xl md:text-5xl font-bold mb-12 text-center uppercase">我的技能樹</h2>
-      
-      <div className="flex flex-wrap justify-center gap-6 md:gap-8 relative z-20">
-        {skills.map((category) => (
-          <div
-            key={category.id}
-            className="skill-category relative"
-            onMouseEnter={() => setHoveredSkill(category.id!)}
-            onMouseLeave={() => setHoveredSkill(null)}
-          >
-            <div className="main-skill bg-zinc-800 text-white px-6 py-3 rounded-full font-bold text-lg cursor-pointer transition-all duration-300 flex items-center hover:bg-white hover:text-black group">
-              <FontAwesomeIcon 
-                icon={iconMap[category.icon] || faQuestionCircle} 
-                className="mr-3 text-white group-hover:text-black transition-colors duration-300" 
-              />
-              {category.main}
-            </div>
-            {hoveredSkill === category.id && (
-              <div className="sub-skills absolute flex flex-wrap gap-2 justify-center bg-zinc-900 border border-zinc-700 rounded-lg p-4 shadow-lg animate-fade-in"
-                   style={{ top: 'calc(100% + 15px)', left: '50%', transform: 'translateX(-50%)', minWidth: '200px' }}>
-                {category.subSkills.map((sub, idx) => (
-                  <span key={idx} className="sub-skill bg-zinc-800 text-gray-300 px-3 py-1 rounded-full text-sm">
-                    {sub}
-                  </span>
-                ))}
-                {/* Arrow for tooltip-like effect */}
-                <div className="absolute w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-zinc-900"
-                     style={{ top: '-8px', left: '50%', transform: 'translateX(-50%)' }}></div>
-              </div>
-            )}
+    <section id="skills" className="w-full bg-[#202124] px-5 py-24 text-white sm:px-8 lg:py-32">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div>
+            <p className="mb-6 font-mono text-xs uppercase tracking-[0.28em] text-white/40">{settings?.skills_eyebrow || "Stack index"}</p>
+            <h2 className="text-[clamp(3rem,8vw,7.5rem)] font-bold uppercase leading-[0.9] tracking-normal">
+              {settings?.skills_title || "Skills"}
+            </h2>
           </div>
-        ))}
+          <div className="max-w-3xl lg:justify-self-end">
+            <p className="font-mono text-xs uppercase tracking-[0.24em] text-white/35">{settings?.skills_stack_label || "Primary stack"}</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {coreStack.map((item) => (
+                <span key={item} className="border border-white/[0.12] bg-white/[0.06] px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-[0.16em] text-white/[0.72]">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {loading && (
+          <p className="py-16 font-mono text-sm uppercase tracking-[0.2em] text-white/40">Loading skills...</p>
+        )}
+
+        {error && (
+          <p className="py-16 font-mono text-sm uppercase tracking-[0.2em] text-red-300">{error}</p>
+        )}
+
+        {!loading && !error && (
+          <div className="mt-10 overflow-hidden border border-white/10 bg-[#1a1b1e]">
+            <div className="hidden grid-cols-[0.22fr_0.2fr_1fr_0.14fr] border-b border-white/10 bg-white/[0.025] px-5 py-3 font-mono text-xs uppercase tracking-[0.2em] text-white/35 md:grid">
+              <span>Area</span>
+              <span>Level</span>
+              <span>Tools</span>
+              <span className="text-right">Focus</span>
+            </div>
+            {skills.map((category, index) => (
+              <article
+                key={category.id || category.main}
+                className="group grid gap-5 border-b border-white/10 p-5 transition-colors duration-300 last:border-b-0 hover:bg-[#26292d] md:grid-cols-[0.22fr_0.2fr_1fr_0.14fr] md:items-center"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/55 transition-colors duration-300 group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white/75">
+                    <FontAwesomeIcon icon={iconMap[category.icon] || faQuestionCircle} />
+                  </span>
+                  <div>
+                    <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/35 transition-colors duration-300 group-hover:text-white/45">
+                      {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <h3 className="mt-1 text-2xl font-bold uppercase leading-tight tracking-normal text-white/[0.88] md:text-3xl">{category.main}</h3>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between font-mono text-xs uppercase tracking-[0.18em] text-white/40 transition-colors duration-300 group-hover:text-white/55">
+                    <span>Ready</span>
+                    <span>{getProficiency(category.main)}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-white/[0.08] transition-colors duration-300 group-hover:bg-white/[0.12]">
+                    <div
+                      className="h-full bg-[#9aa7a3] transition-colors duration-300 group-hover:bg-[#b8c4bf]"
+                      style={{ width: `${getProficiency(category.main)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {category.subSkills.map((sub) => (
+                    <span
+                      key={sub}
+                      className="border border-white/[0.12] bg-white/[0.025] px-3 py-1.5 font-mono text-xs uppercase tracking-[0.14em] text-white/[0.58] transition-colors duration-300 group-hover:border-white/[0.18] group-hover:bg-white/[0.04] group-hover:text-white/[0.72]"
+                    >
+                      {sub}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="max-w-sm leading-7 text-white/[0.48] transition-colors duration-300 group-hover:text-white/[0.62] md:text-right">
+                  {getCategoryDescription(category.main, settings)}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 };
 

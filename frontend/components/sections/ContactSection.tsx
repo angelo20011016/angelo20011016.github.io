@@ -88,7 +88,7 @@ const ContactSection: React.FC = () => {
               transition={{ duration: 0.8 }}
               className="text-7xl md:text-8xl lg:text-[12rem] font-mono font-bold uppercase tracking-tighter leading-none"
             >
-              Contact
+              {settings?.contact_title || "Contact"}
             </motion.h2>
           </div>
 
@@ -96,13 +96,13 @@ const ContactSection: React.FC = () => {
             {/* Left: Contact Info */}
             <div className="space-y-12">
               <div className="space-y-4">
-                <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">Get in touch</p>
+                <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">{settings?.contact_intro_label || "Get in touch"}</p>
                 <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">{settings?.contact_email || 'angelo@example.com'}</p>
                 <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">{settings?.contact_phone || '+886 912 345 678'}</p>
               </div>
               
               <div className="space-y-4">
-                <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">Location</p>
+                <p className="text-white/60 font-mono text-sm uppercase tracking-widest font-bold">{settings?.contact_location_label || "Location"}</p>
                 <p className="text-2xl md:text-3xl font-mono uppercase tracking-tight">{settings?.contact_location || 'Taipei, Taiwan'}</p>
               </div>
             </div>
@@ -111,10 +111,10 @@ const ContactSection: React.FC = () => {
             <div className="w-full">
               <form onSubmit={handleSubmit} className="space-y-12">
                 <div className="space-y-2">
-                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">01 / What&apos;s your name?</label>
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">{settings?.contact_name_label || "01 / What's your name?"}</label>
                   <input
                     type="text"
-                    placeholder="NAME"
+                    placeholder={settings?.contact_name_placeholder || "NAME"}
                     className="w-full bg-transparent border-b border-white/20 py-4 outline-none text-2xl md:text-3xl font-mono uppercase focus:border-white transition-colors"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -123,10 +123,10 @@ const ContactSection: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">02 / What&apos;s your email?</label>
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">{settings?.contact_email_label || "02 / What's your email?"}</label>
                   <input
                     type="email"
-                    placeholder="EMAIL"
+                    placeholder={settings?.contact_email_placeholder || "EMAIL"}
                     className="w-full bg-transparent border-b border-white/20 py-4 outline-none text-2xl md:text-3xl font-mono uppercase focus:border-white transition-colors"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -135,9 +135,9 @@ const ContactSection: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">03 / Your message</label>
+                  <label className="text-white/40 font-mono text-xs uppercase tracking-[0.2em]">{settings?.contact_message_label || "03 / Your message"}</label>
                   <textarea
-                    placeholder="MESSAGE"
+                    placeholder={settings?.contact_message_placeholder || "MESSAGE"}
                     rows={4}
                     className="w-full bg-transparent border-b border-white/20 py-4 outline-none text-2xl md:text-3xl font-mono uppercase focus:border-white transition-colors resize-none"
                     value={message}
@@ -159,7 +159,7 @@ const ContactSection: React.FC = () => {
                       disabled={loading}
                       className="w-32 h-32 md:w-44 md:h-44 rounded-full bg-white text-black font-mono font-bold uppercase text-sm tracking-widest hover:scale-105 transition-transform disabled:opacity-50 flex items-center justify-center text-center px-4"
                     >
-                      {loading ? 'Sending' : 'Send'}
+                      {loading ? settings?.contact_submitting_label || 'Sending' : settings?.contact_submit_label || 'Send'}
                     </button>
                   </Magnetic>
                 </div>
@@ -173,7 +173,7 @@ const ContactSection: React.FC = () => {
       <div className="w-full px-6 md:px-12 lg:px-24 py-20 border-t border-white/10 flex flex-col md:flex-row justify-between items-start md:items-end gap-16 bg-black/40">
         <div className="flex flex-col gap-12">
           <div className="flex flex-col gap-6">
-            <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">Socials</p>
+            <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">{settings?.contact_socials_label || "Socials"}</p>
             <div className="flex flex-wrap gap-8 md:gap-12 font-mono text-lg md:text-xl uppercase tracking-[0.1em]">
               <a href={settings?.social_github || "https://github.com/angeloange?tab=repositories"} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">GitHub</a>
               <a href={settings?.social_instagram || "https://www.instagram.com/angelo__1016/"} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors border-b border-transparent hover:border-primary">Instagram</a>
@@ -181,13 +181,13 @@ const ContactSection: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4 md:gap-16 font-mono text-sm md:text-base uppercase tracking-[0.1em] text-white/40">
-            <p>© 2026 Angelo — Created with Passion</p>
-            <p>Built with Next.js & GSAP</p>
+            <p>{settings?.contact_footer_note || "© 2026 Angelo — Created with Passion"}</p>
+            <p>{settings?.contact_footer_stack || "Built with Next.js & GSAP"}</p>
           </div>
         </div>
         
         <div className="text-left md:text-right flex flex-col gap-6">
-          <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">Local Time</p>
+          <p className="text-white/50 font-mono text-sm md:text-base uppercase tracking-[0.3em] font-bold">{settings?.contact_local_time_label || "Local Time"}</p>
           <p className="font-mono text-xl md:text-2xl uppercase tracking-widest">
             {localTime ? `${localTime} TPE` : 'TPE'}
           </p>

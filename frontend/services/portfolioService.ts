@@ -1,6 +1,6 @@
 import { API_BASE_URL } from './authService';
 
-interface PortfolioPayload {
+export interface PortfolioPayload {
   title: string;
   description: string;
   image_url: string;

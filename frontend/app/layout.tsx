@@ -4,11 +4,7 @@ import { Syne, Inter } from "next/font/google";
 import "./globals.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import SmoothScroll from "@/components/common/SmoothScroll";
-import TopNavigation from "@/components/layout/TopNavigation";
-import SideNavigation from "@/components/layout/SideNavigation";
-import CustomCursor from "@/components/common/CustomCursor";
-import Footer from "@/components/layout/Footer";
+import AppShell from "@/components/layout/AppShell";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -31,19 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable}`}>
-      <body className="bg-background text-foreground antialiased selection:bg-primary selection:text-white cursor-none">
-        <SmoothScroll>
-          <CustomCursor />
-          <div className="flex flex-col min-h-screen relative">
-            <TopNavigation />
-            <SideNavigation />
-            <main className="flex-grow relative z-10">
-              {children}
-            </main>
-          </div>
-        </SmoothScroll>
+      <body className="bg-background text-foreground antialiased selection:bg-primary selection:text-white">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
 }
-

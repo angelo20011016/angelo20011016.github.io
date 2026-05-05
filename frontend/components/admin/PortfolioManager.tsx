@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getPortfolioItems, deletePortfolioItem, createPortfolioItem, updatePortfolioItem } from '@/services/portfolioService';
+import { getPortfolioItems, deletePortfolioItem, createPortfolioItem, updatePortfolioItem, PortfolioPayload } from '@/services/portfolioService';
 import Modal from '@/components/common/Modal';
 import PortfolioForm from '@/components/admin/PortfolioForm';
 
@@ -67,15 +67,23 @@ export default function PortfolioManager() {
     }
 
     try {
+      const payload: PortfolioPayload = {
+        title: cleanItemData.title,
+        description: cleanItemData.description,
+        image_url: cleanItemData.image_url || '',
+        content: cleanItemData.content || '',
+        tags: cleanItemData.tags,
+      };
+
       // The 'cleanItemData' from the form no longer contains an 'id'.
       // We decide whether to update or create based on the 'editingItem' state.
       const id = editingItem?.id || editingItem?._id;
       if (editingItem && id) {
         // Update existing item, using whichever id property exists
-        await updatePortfolioItem(id, cleanItemData, token);
+        await updatePortfolioItem(id, payload, token);
       } else {
         // Create new item
-        await createPortfolioItem(cleanItemData, token);
+        await createPortfolioItem(payload, token);
       }
       handleCloseModal();
       await fetchItems(); // Refresh data

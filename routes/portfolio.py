@@ -92,6 +92,9 @@ async def create_portfolio(item: PortfolioItem, db: AsyncIOMotorClient = Depends
         # 使用 Pydantic V2 的 model_dump 方法
         if "_id" in portfolio_dict and portfolio_dict["_id"] is None:
             del portfolio_dict["_id"]
+        # 使用 exclude_none=True 自動過濾值為 None 的欄位（如未提供的 _id）
+        # by_alias=True 確保產生的 key 是符合 MongoDB 的 _id
+        portfolio_dict = item.model_dump(by_alias=True, exclude_none=True)
 
         result = await db.portfolio.insert_one(portfolio_dict)
         

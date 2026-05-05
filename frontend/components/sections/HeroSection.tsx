@@ -23,6 +23,7 @@ const HeroSection: React.FC = () => {
 
   const getHeroImageUrl = (url?: string) => {
     if (!url) return "";
+    if (url === "/placeholder.jpg") return "/placeholder.svg";
     if (url.startsWith('http')) return url;
     if (url.startsWith('/static/')) return `${API_BASE_URL}${url}`;
     return url;
