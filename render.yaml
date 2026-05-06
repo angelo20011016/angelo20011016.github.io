@@ -36,14 +36,11 @@ services:
 
   - type: web
     name: happywecan-frontend
-    env: node
-    rootDir: frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
     plan: free
-    buildCommand: npm ci && npm run build
-    startCommand: npm run start
     autoDeployTrigger: checksPass
     envVars:
-      - key: NODE_VERSION
-        value: 22
       - key: NEXT_PUBLIC_API_URL
         value: https://api.happywecan.com
