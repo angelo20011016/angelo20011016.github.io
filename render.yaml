@@ -1,10 +1,49 @@
 services:
   - type: web
-    name: my-website
-    env: python
-    buildCommand: "./render_build.sh"
-    startCommand: "gunicorn wsgi:app"
+    name: happywecan-api
+    env: docker
+    dockerfilePath: ./Dockerfile.backend
     plan: free
-    buildpacks:
-      - heroku/python
-      - https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git
+    autoDeployTrigger: checksPass
+    healthCheckPath: /healthz
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://angelo.happywecan.com
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: "True"
+      - key: AZURE_SPEECH_KEY
+        sync: false
+      - key: AZURE_SPEECH_REGION
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+  - type: web
+    name: happywecan-frontend
+    env: node
+    rootDir: frontend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NEXT_PUBLIC_API_URL
+        value: https://api.happywecan.com

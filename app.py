@@ -45,6 +45,10 @@ origins = [
     
     # Add your production frontend URL here when deployed
 ]
+cors_origins = os.getenv("CORS_ORIGINS")
+if cors_origins:
+    origins.extend(origin.strip() for origin in cors_origins.split(",") if origin.strip())
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -78,6 +82,11 @@ app.include_router(static_content_router, prefix="/api")
 app.include_router(upload_router, prefix="/api") # Include the new upload router
 app.include_router(skill_router, prefix="/api") # Include the new skill router
 app.include_router(hobby_router, prefix="/api") # Include the new hobby router
+
+
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
 
 
 if __name__ == '__main__':
