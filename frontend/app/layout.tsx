@@ -1,12 +1,7 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Syne, Inter } from "next/font/google";
 import "./globals.css";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import AppShell from "@/components/layout/AppShell";
-
-gsap.registerPlugin(ScrollTrigger);
+import RootShell from "@/components/layout/RootShell";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -20,6 +15,14 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+export const metadata: Metadata = {
+  title: {
+    default: "Angelo Developer",
+    template: "%s | Angelo Developer",
+  },
+  description: "Angelo's portfolio, blog, skills, and contact site.",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable}`}>
       <body className="bg-background text-foreground antialiased selection:bg-primary selection:text-white">
-        <AppShell>{children}</AppShell>
+        <RootShell>{children}</RootShell>
       </body>
     </html>
   );
