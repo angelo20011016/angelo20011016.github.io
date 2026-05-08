@@ -22,6 +22,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html.intro-splash-pending,
+html.intro-splash-pending body {
+  background: #000000;
+}
+
+html.intro-splash-pending body {
+  overflow: hidden;
+}
+
+html.intro-splash-pending body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background: #000000;
+  pointer-events: none;
+}
+
 /* Base Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-mono);

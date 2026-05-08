@@ -23,6 +23,28 @@ export const metadata: Metadata = {
   description: "Angelo's portfolio, blog, skills, and contact site.",
 };
 
+const introSplashBootScript = `
+(() => {
+  try {
+    const path = window.location.pathname;
+    if (path.startsWith("/admin") || path.startsWith("/login")) return;
+
+    const now = new Date();
+    const today = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0")
+    ].join("-");
+
+    if (localStorage.getItem("angelo:intro-splash-date") !== today) {
+      document.documentElement.classList.add("intro-splash-pending");
+    }
+  } catch {
+    document.documentElement.classList.add("intro-splash-pending");
+  }
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +52,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: introSplashBootScript }} />
+      </head>
       <body className="bg-background text-foreground antialiased selection:bg-primary selection:text-white">
         <RootShell>{children}</RootShell>
       </body>

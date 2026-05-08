@@ -5,7 +5,7 @@ import { getSiteSettings } from "@/services/staticContentService";
 
 const STORAGE_KEY = "angelo:intro-splash-date";
 const FALLBACK_KEYWORDS = ["DX", "破格升職", "考績優異"];
-const TOTAL_DURATION_MS = 1250;
+const TOTAL_DURATION_MS = 2600;
 const MAX_KEYWORDS = 5;
 
 function getTodayKey() {
@@ -26,6 +26,10 @@ function parseKeywords(value?: string) {
   return keywords?.length ? keywords : FALLBACK_KEYWORDS;
 }
 
+function clearPendingSplash() {
+  document.documentElement.classList.remove("intro-splash-pending");
+}
+
 export default function DailyKeywordSplash() {
   const todayKey = useMemo(() => getTodayKey(), []);
   const [visible, setVisible] = useState(() => {
@@ -35,7 +39,10 @@ export default function DailyKeywordSplash() {
   const [keywords, setKeywords] = useState(FALLBACK_KEYWORDS);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      clearPendingSplash();
+      return;
+    }
 
     let hideTimer: number | undefined;
     let cancelled = false;
@@ -43,6 +50,7 @@ export default function DailyKeywordSplash() {
     const finish = () => {
       if (cancelled) return;
       localStorage.setItem(STORAGE_KEY, todayKey);
+      clearPendingSplash();
       setVisible(false);
     };
 
@@ -54,6 +62,7 @@ export default function DailyKeywordSplash() {
         if (cancelled) return;
 
         if (!settings.intro_splash_enabled) {
+          clearPendingSplash();
           setVisible(false);
           return;
         }
@@ -68,6 +77,7 @@ export default function DailyKeywordSplash() {
 
     return () => {
       cancelled = true;
+      clearPendingSplash();
       if (hideTimer) {
         window.clearTimeout(hideTimer);
       }
@@ -89,7 +99,7 @@ export default function DailyKeywordSplash() {
             className="intro-splash-word absolute inset-0 flex items-center justify-center px-6 text-center font-mono text-[clamp(2.6rem,10vw,8.6rem)] font-semibold uppercase leading-none text-white"
             style={{
               animationDelay: `${index * itemDuration}ms`,
-              animationDuration: `${itemDuration + 180}ms`,
+              animationDuration: `${itemDuration + 260}ms`,
             }}
           >
             <span className="intro-splash-word-shell">{keyword}</span>
