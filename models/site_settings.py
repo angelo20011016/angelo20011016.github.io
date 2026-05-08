@@ -33,6 +33,10 @@ class SiteSettings(BaseModel):
     nav_blog_label: str = Field("Blog", description="Blog navigation label")
     nav_contact_label: str = Field("Contact", description="Contact navigation label")
 
+    # Visitor Intro
+    intro_splash_enabled: bool = Field(True, description="Show daily keyword splash intro for public visitors")
+    intro_splash_keywords: str = Field("DX, 破格升職, 考績優異", description="Comma-separated keywords for the visitor splash intro")
+
     # Homepage Section Builder
     section_hero_enabled: bool = Field(True, description="Show hero section on homepage")
     section_hero_order: int = Field(1, description="Hero section order")

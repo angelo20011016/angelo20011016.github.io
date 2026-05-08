@@ -52,6 +52,8 @@ export interface SiteSettings {
   nav_portfolio_label: string;
   nav_blog_label: string;
   nav_contact_label: string;
+  intro_splash_enabled: boolean;
+  intro_splash_keywords: string;
   section_hero_enabled: boolean;
   section_hero_order: number;
   section_about_enabled: boolean;

@@ -80,6 +80,7 @@ type SiteSettingsStringKey = keyof Pick<
   | 'nav_portfolio_label'
   | 'nav_blog_label'
   | 'nav_contact_label'
+  | 'intro_splash_keywords'
   | 'stat_1_value'
   | 'stat_1_label'
   | 'stat_2_value'
@@ -147,6 +148,7 @@ type SiteSettingsBooleanKey = keyof Pick<
   | 'section_portfolio_enabled'
   | 'section_blog_enabled'
   | 'section_contact_enabled'
+  | 'intro_splash_enabled'
 >;
 
 type SiteSettingsNumberKey = keyof Pick<
@@ -481,6 +483,36 @@ const SiteSettingsForm: React.FC = () => {
           {navFields.map(renderSettingField)}
           <div className="md:col-span-2">
             {renderSettingField({ key: 'nav_mobile_caption', label: 'Mobile Menu Caption', textarea: true })}
+          </div>
+        </div>
+
+        <h3 className="text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Visitor Intro Splash</h3>
+        <p className="text-sm text-gray-400">
+          Shows a black keyword intro once per visitor per day before the public site appears.
+        </p>
+        <div className="grid grid-cols-1 gap-4 rounded bg-gray-900/40 p-4 md:grid-cols-[auto_1fr] md:items-start">
+          <label className="flex items-center gap-3 text-sm font-bold text-gray-300">
+            <input
+              type="checkbox"
+              name="intro_splash_enabled"
+              checked={Boolean(settings.intro_splash_enabled)}
+              onChange={handleChange}
+              className="h-5 w-5 rounded border-gray-600 bg-gray-700"
+            />
+            Enabled
+          </label>
+          <div>
+            <label htmlFor="intro_splash_keywords" className="block text-gray-300 text-sm font-bold mb-2">Keywords:</label>
+            <textarea
+              id="intro_splash_keywords"
+              name="intro_splash_keywords"
+              value={settings.intro_splash_keywords || ''}
+              onChange={handleChange}
+              rows={2}
+              placeholder="DX, 破格升職, 考績優異"
+              className="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white"
+            />
+            <p className="mt-2 text-xs text-gray-500">Separate keywords with commas. The animation uses the first few non-empty items.</p>
           </div>
         </div>
 

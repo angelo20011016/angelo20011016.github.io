@@ -68,6 +68,8 @@ class StaticContentService:
                 nav_portfolio_label="Work",
                 nav_blog_label="Blog",
                 nav_contact_label="Contact",
+                intro_splash_enabled=True,
+                intro_splash_keywords="DX, 破格升職, 考績優異",
                 section_hero_enabled=True,
                 section_hero_order=1,
                 section_about_enabled=True,

@@ -108,7 +108,7 @@ const SkillCloud: React.FC = () => {
 
         {!loading && !error && (
           <div className="mt-10 overflow-hidden border border-white/10 bg-[#1a1b1e]">
-            <div className="hidden grid-cols-[0.22fr_0.2fr_1fr_0.14fr] border-b border-white/10 bg-white/[0.025] px-5 py-3 font-mono text-xs uppercase tracking-[0.2em] text-white/35 md:grid">
+            <div className="hidden grid-cols-[minmax(17rem,0.9fr)_minmax(10rem,0.55fr)_minmax(16rem,1fr)_minmax(16rem,0.9fr)] border-b border-white/10 bg-white/[0.025] px-5 py-3 font-mono text-xs uppercase tracking-[0.2em] text-white/35 xl:grid">
               <span>Area</span>
               <span>Level</span>
               <span>Tools</span>
@@ -117,17 +117,17 @@ const SkillCloud: React.FC = () => {
             {skills.map((category, index) => (
               <article
                 key={category.id || category.main}
-                className="group grid gap-5 border-b border-white/10 p-5 transition-colors duration-300 last:border-b-0 hover:bg-[#26292d] md:grid-cols-[0.22fr_0.2fr_1fr_0.14fr] md:items-center"
+                className="group grid gap-5 border-b border-white/10 p-5 transition-colors duration-300 last:border-b-0 hover:bg-[#26292d] md:grid-cols-[minmax(17rem,1fr)_minmax(12rem,0.7fr)] md:items-center xl:grid-cols-[minmax(17rem,0.9fr)_minmax(10rem,0.55fr)_minmax(16rem,1fr)_minmax(16rem,0.9fr)]"
               >
-                <div className="flex items-center gap-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/55 transition-colors duration-300 group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white/75">
+                <div className="flex min-w-0 items-center gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/55 transition-colors duration-300 group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white/75">
                     <FontAwesomeIcon icon={iconMap[category.icon] || faQuestionCircle} />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/35 transition-colors duration-300 group-hover:text-white/45">
                       {String(index + 1).padStart(2, "0")}
                     </p>
-                    <h3 className="mt-1 text-2xl font-bold uppercase leading-tight tracking-normal text-white/[0.88] md:text-3xl">{category.main}</h3>
+                    <h3 className="mt-1 whitespace-nowrap text-[clamp(1.45rem,6vw,1.95rem)] font-bold uppercase leading-tight tracking-normal text-white/[0.88] xl:text-3xl">{category.main}</h3>
                   </div>
                 </div>
 
@@ -144,18 +144,18 @@ const SkillCloud: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-1">
                   {category.subSkills.map((sub) => (
                     <span
                       key={sub}
-                      className="border border-white/[0.12] bg-white/[0.025] px-3 py-1.5 font-mono text-xs uppercase tracking-[0.14em] text-white/[0.58] transition-colors duration-300 group-hover:border-white/[0.18] group-hover:bg-white/[0.04] group-hover:text-white/[0.72]"
+                      className="max-w-full border border-white/[0.12] bg-white/[0.025] px-3 py-1.5 font-mono text-xs uppercase tracking-[0.12em] text-white/[0.58] transition-colors duration-300 group-hover:border-white/[0.18] group-hover:bg-white/[0.04] group-hover:text-white/[0.72]"
                     >
                       {sub}
                     </span>
                   ))}
                 </div>
 
-                <p className="max-w-sm leading-7 text-white/[0.48] transition-colors duration-300 group-hover:text-white/[0.62] md:text-right">
+                <p className="max-w-2xl leading-7 text-white/[0.48] transition-colors duration-300 group-hover:text-white/[0.62] md:col-span-2 xl:col-span-1 xl:max-w-sm xl:text-right">
                   {getCategoryDescription(category.main, settings)}
                 </p>
               </article>

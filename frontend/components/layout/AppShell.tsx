@@ -5,6 +5,7 @@ import SmoothScroll from "@/components/common/SmoothScroll";
 import TopNavigation from "@/components/layout/TopNavigation";
 import SideNavigation from "@/components/layout/SideNavigation";
 import CustomCursor from "@/components/common/CustomCursor";
+import DailyKeywordSplash from "@/components/common/DailyKeywordSplash";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SmoothScroll>
+      <DailyKeywordSplash />
       <CustomCursor />
       <div className="relative flex min-h-screen cursor-none flex-col">
         <TopNavigation />
