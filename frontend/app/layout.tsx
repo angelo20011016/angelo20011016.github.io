@@ -21,6 +21,14 @@ export const metadata: Metadata = {
     template: "%s | Angelo Developer",
   },
   description: "Angelo's portfolio, blog, skills, and contact site.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/icon.png", type: "image/png" }],
+  },
 };
 
 const introSplashBootScript = `
