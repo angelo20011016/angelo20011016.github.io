@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link as ScrollLink } from "react-scroll";
+import Image from "next/image";
 import { SiteSettings, getSiteSettings } from "@/services/staticContentService";
 
 const defaultNavItems = [
@@ -68,19 +69,15 @@ export default function TopNavigation() {
         className="fixed left-0 top-0 z-[100] flex w-full items-center justify-between px-5 py-5 mix-blend-difference sm:px-8"
       >
         <ScrollLink to="hero" smooth={true} duration={800} className="group flex cursor-pointer items-center space-x-4">
-          <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white text-2xl font-bold text-black">
-            <motion.span
-              className="absolute flex h-full w-full items-center justify-center"
-              whileHover={{ y: -44 }}
-            >
-              A
-            </motion.span>
-            <motion.span
-              className="absolute flex h-full w-full translate-y-11 items-center justify-center"
-              whileHover={{ y: 0 }}
-            >
-              A
-            </motion.span>
+          <div className="relative h-11 w-11 overflow-hidden rounded-full border border-white/20 bg-white">
+            <Image
+              src="/icon.png"
+              alt="Angelo logo"
+              fill
+              sizes="44px"
+              className="object-cover"
+              priority
+            />
           </div>
           <div className="h-6 overflow-hidden font-mono text-sm font-bold uppercase tracking-[0.2em] text-white sm:text-base">
             <motion.div
